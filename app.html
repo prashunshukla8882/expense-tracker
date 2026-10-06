@@ -1,0 +1,1447 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExpenseFlow - Smart Expense Tracker</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/animations.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    
+    <script>
+        // Firebase Configuration
+        const firebaseConfig = {
+            apiKey: "AIzaSyBJzqUTVi8osOot5Ju_NT2LTbIZueQa_iI",
+            authDomain: "expense-tracker-8bbaa.firebaseapp.com",
+            projectId: "expense-tracker-8bbaa",
+            storageBucket: "expense-tracker-8bbaa.firebasestorage.app",
+            messagingSenderId: "39805734943",
+            appId: "1:39805734943:web:4bae3e76c1c14f53ed052a"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+    </script>
+</head>
+
+<body>
+    <!-- Splash Screen -->
+    <div id="splash-screen" class="splash-screen">
+        <div class="splash-content">
+            <div class="logo-animation">
+                <i class="fas fa-wallet"></i>
+            </div>
+            <h1>ExpenseFlow</h1>
+            <div class="loading-bar">
+                <div class="loading-progress"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main App -->
+    <div id="app" class="app hidden">
+        <!-- Sidebar -->
+        <nav class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo">
+                    <i class="fas fa-wallet"></i>
+                    <span>ExpenseFlow</span>
+                </div>
+            </div>
+            <ul class="nav-menu">
+                <li class="nav-item active" data-page="dashboard">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </li>
+                <li class="nav-item" data-page="transactions">
+                    <i class="fas fa-exchange-alt"></i>
+                    <span>Transactions</span>
+                </li>
+                <li class="nav-item" data-page="analytics">
+                    <i class="fas fa-chart-pie"></i>
+                    <span>Analytics</span>
+                </li>
+                <li class="nav-item" data-page="budget">
+                    <i class="fas fa-bullseye"></i>
+                    <span>Budget</span>
+                </li>
+                <li class="nav-item" data-page="calendar">
+                    <i class="fas fa-calendar-alt"></i>
+                    <span>Calendar</span>
+                </li>
+                <li class="nav-item" data-page="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </li>
+                <li class="nav-item" data-page="borrow">
+                    <i class="fas fa-hand-holding-usd"></i>
+                    <span>Borrow</span>
+                </li>
+                <li class="nav-item" data-page="wishlist">
+                    <i class="fas fa-shopping-basket"></i>
+                    <span>Future Purchases</span>
+                </li>
+                <li class="nav-item" data-page="notes">
+                    <i class="fas fa-sticky-note"></i>
+                    <span>Notes</span>
+                </li>
+                <!-- Add this to your sidebar or header -->
+                <button class="logout-btn" id="logoutBtn" title="Logout">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </ul>
+            <div class="sidebar-footer">
+                <button class="theme-toggle" id="themeToggle">
+                    <i class="fas fa-moon"></i>
+                    <span>Dark Mode</span>
+                </button>
+            </div>
+            <!-- Add this at the bottom of your sidebar, before </nav> -->
+            <div class="sidebar-footer">
+                <button class="logout-btn" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+
+            
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Header -->
+            <header class="header">
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+                <div class="search-bar">
+                    <i class="fas fa-search"></i>
+                    <input type="text" id="searchInput" placeholder="Search transactions...">
+                </div>
+                <div class="header-actions">
+                    <button class="notification-btn" id="notificationBtn">
+                        <i class="fas fa-bell"></i>
+                        <span class="badge" id="notificationBadge">3</span>
+                    </button>
+                    <div class="user-profile">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" alt="User">
+                        <span id="userName">User</span>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Dashboard Page -->
+            <section class="page active" id="dashboard">
+                <div class="page-header">
+                    <h1>Dashboard</h1>
+                    <p class="date-display" id="currentDate"></p>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card income animate-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Income</h3>
+                            <p class="stat-value" id="totalIncome">$0.00</p>
+                            <span class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i> 12%
+                            </span>
+                        </div>
+                        <div class="stat-chart">
+                            <canvas id="incomeSparkline"></canvas>
+                        </div>
+                    </div>
+                    <div class="stat-card expense animate-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Total Expenses</h3>
+                            <p class="stat-value" id="totalExpense">$0.00</p>
+                            <span class="stat-change negative">
+                                <i class="fas fa-arrow-up"></i> 8%
+                            </span>
+                        </div>
+                        <div class="stat-chart">
+                            <canvas id="expenseSparkline"></canvas>
+                        </div>
+                    </div>
+                    <div class="stat-card balance animate-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Balance</h3>
+                            <p class="stat-value" id="totalBalance">$0.00</p>
+                            <span class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i> 5%
+                            </span>
+                        </div>
+                        <div class="stat-chart">
+                            <canvas id="balanceSparkline"></canvas>
+                        </div>
+                    </div>
+                    <div class="stat-card savings animate-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-piggy-bank"></i>
+                        </div>
+                        <div class="stat-info">
+                            <h3>Savings</h3>
+                            <p class="stat-value" id="totalSavings">$0.00</p>
+                            <span class="stat-change positive">
+                                <i class="fas fa-arrow-up"></i> 15%
+                            </span>
+                        </div>
+                        <div class="stat-chart">
+                            <canvas id="savingsSparkline"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts Section -->
+                <div class="charts-grid">
+                    <div class="chart-card animate-card">
+                        <div class="chart-header">
+                            <h3>Spending Overview</h3>
+                            <div class="chart-actions">
+                                <select id="overviewPeriod">
+                                    <option value="week">This Week</option>
+                                    <option value="month" selected>This Month</option>
+                                    <option value="year">This Year</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="spendingChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="chart-card animate-card">
+                        <div class="chart-header">
+                            <h3>Expense by Category</h3>
+                            <button class="chart-expand">
+                                <i class="fas fa-expand"></i>
+                            </button>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="categoryChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Transactions -->
+                <div class="recent-transactions animate-card">
+                    <div class="section-header">
+                        <h3>Recent Transactions</h3>
+                        <button class="view-all-btn" data-page="transactions">View All</button>
+                    </div>
+                    <div class="transactions-list" id="recentTransactions">
+                        <!-- Transactions will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Quick Add FAB -->
+                <button class="fab" id="quickAddBtn">
+                    <i class="fas fa-plus"></i>
+                </button>
+            </section>
+
+            <!-- Transactions Page -->
+            <section class="page" id="transactions">
+                <div class="page-header">
+                    <h1>Transactions</h1>
+                    <button class="add-btn" id="addTransactionBtn">
+                        <i class="fas fa-plus"></i>
+                        Add Transaction
+                    </button>
+                </div>
+
+                <!-- Filters -->
+                <div class="filters-bar animate-card">
+                    <div class="filter-group">
+                        <label>Type</label>
+                        <select id="filterType">
+                            <option value="all">All</option>
+                            <option value="income">Income</option>
+                            <option value="expense">Expense</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Category</label>
+                        <select id="filterCategory">
+                            <option value="all">All Categories</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Date Range</label>
+                        <input type="date" id="filterDateFrom">
+                        <span>to</span>
+                        <input type="date" id="filterDateTo">
+                    </div>
+                    <button class="filter-btn" id="applyFilters">
+                        <i class="fas fa-filter"></i>
+                        Apply
+                    </button>
+                    <button class="clear-btn" id="clearFilters">
+                        <i class="fas fa-times"></i>
+                        Clear
+                    </button>
+                </div>
+
+                <!-- Transactions Table -->
+                <div class="transactions-table animate-card">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Description</th>
+                                <th>Category</th>
+                                <th>Amount</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactionsTableBody">
+                            <!-- Transactions will be inserted here -->
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- Pagination -->
+                <div class="pagination" id="pagination">
+                    <!-- Pagination will be inserted here -->
+                </div>
+
+                <!-- Export Button -->
+                <div class="export-section">
+                    <button class="export-btn" id="exportCSV">
+                        <i class="fas fa-file-csv"></i>
+                        Export CSV
+                    </button>
+                    <button class="export-btn" id="exportPDF">
+                        <i class="fas fa-file-pdf"></i>
+                        Export PDF
+                    </button>
+                </div>
+            </section>
+
+            <!-- Analytics Page -->
+            <section class="page" id="analytics">
+                <div class="page-header">
+                    <h1>Analytics</h1>
+                    <div class="period-selector">
+                        <button class="period-btn active" data-period="week">Week</button>
+                        <button class="period-btn" data-period="month">Month</button>
+                        <button class="period-btn" data-period="year">Year</button>
+                    </div>
+                </div>
+
+                <!-- Analytics Charts -->
+                <div class="analytics-grid">
+                    <div class="analytics-card full-width animate-card">
+                        <h3>Income vs Expenses Trend</h3>
+                        <div class="chart-container large">
+                            <canvas id="trendChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="analytics-card animate-card">
+                        <h3>Category Breakdown</h3>
+                        <div class="chart-container">
+                            <canvas id="categoryPieChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="analytics-card animate-card">
+                        <h3>Daily Spending Pattern</h3>
+                        <div class="chart-container">
+                            <canvas id="dailyPatternChart"></canvas>
+                        </div>
+                    </div>
+                    <div class="analytics-card animate-card">
+                        <h3>Top Spending Categories</h3>
+                        <div class="top-categories" id="topCategories">
+                            <!-- Top categories will be inserted here -->
+                        </div>
+                    </div>
+                    <div class="analytics-card animate-card">
+                        <h3>Monthly Comparison</h3>
+                        <div class="chart-container">
+                            <canvas id="monthlyComparisonChart"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Insights -->
+                <div class="insights-section animate-card">
+                    <h3><i class="fas fa-lightbulb"></i> Insights</h3>
+                    <div class="insights-grid" id="insightsGrid">
+                        <!-- Insights will be inserted here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Budget Page -->
+            <section class="page" id="budget">
+                <div class="page-header">
+                    <h1>Budget Planning</h1>
+                    <button class="add-btn" id="addBudgetBtn">
+                        <i class="fas fa-plus"></i>
+                        Add Budget
+                    </button>
+                </div>
+
+                <!-- Budget Overview -->
+                <div class="budget-overview animate-card">
+                    <div class="budget-summary">
+                        <div class="budget-item">
+                            <span>Total Budget</span>
+                            <strong id="totalBudget">$0.00</strong>
+                        </div>
+                        <div class="budget-item">
+                            <span>Spent</span>
+                            <strong id="totalSpent">$0.00</strong>
+                        </div>
+                        <div class="budget-item">
+                            <span>Remaining</span>
+                            <strong id="totalRemaining">$0.00</strong>
+                        </div>
+                    </div>
+                    <div class="overall-progress">
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="overallProgress"></div>
+                        </div>
+                        <span id="overallPercentage">0%</span>
+                    </div>
+                </div>
+
+                <!-- Budget Cards -->
+                <div class="budget-grid" id="budgetGrid">
+                    <!-- Budget cards will be inserted here -->
+                </div>
+            </section>
+
+            <!-- Calendar Page -->
+            <section class="page" id="calendar">
+                <div class="page-header">
+                    <h1>Calendar</h1>
+                    <div class="calendar-nav">
+                        <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                        <span id="currentMonth">January 2024</span>
+                        <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                    </div>
+                </div>
+
+                <div class="calendar-container animate-card">
+                    <div class="calendar-header">
+                        <span>Sun</span>
+                        <span>Mon</span>
+                        <span>Tue</span>
+                        <span>Wed</span>
+                        <span>Thu</span>
+                        <span>Fri</span>
+                        <span>Sat</span>
+                    </div>
+                    <div class="calendar-grid" id="calendarGrid">
+                        <!-- Calendar days will be inserted here -->
+                    </div>
+                </div>
+
+                <!-- Day Details -->
+                <div class="day-details animate-card" id="dayDetails">
+                    <h3>Select a day to view transactions</h3>
+                    <div class="day-transactions" id="dayTransactions">
+                        <!-- Day transactions will be inserted here -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- Settings Page -->
+            <section class="page" id="settings">
+                <div class="page-header">
+                    <h1>Settings</h1>
+                </div>
+
+                <div class="settings-grid">
+                    <!-- Profile Settings -->
+                    <div class="settings-card animate-card">
+                        <h3><i class="fas fa-user"></i> Profile</h3>
+                        <div class="settings-form">
+                            <div class="form-group">
+                                <label>Name</label>
+                                <input type="text" id="settingsName" placeholder="Your name">
+                            </div>
+                            <div class="form-group">
+                                <label>Email</label>
+                                <input type="email" id="settingsEmail" placeholder="your@email.com">
+                            </div>
+                            <button class="save-btn" id="saveProfile">Save Profile</button>
+                        </div>
+                    </div>
+
+                    <!-- Currency Settings -->
+                    <div class="settings-card animate-card">
+                        <h3><i class="fas fa-dollar-sign"></i> Currency</h3>
+                        <div class="settings-form">
+                            <div class="form-group">
+                                <label>Currency</label>
+                                <select id="settingsCurrency">
+                                    <option value="USD">USD ($)</option>
+                                    <option value="EUR">EUR (€)</option>
+                                    <option value="GBP">GBP (£)</option>
+                                    <option value="INR">INR (₹)</option>
+                                    <option value="JPY">JPY (¥)</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Categories Management -->
+                    <div class="settings-card animate-card">
+                        <h3><i class="fas fa-tags"></i> Categories</h3>
+                        <div class="categories-list" id="categoriesList">
+                            <!-- Categories will be inserted here -->
+                        </div>
+                        <button class="add-category-btn" id="addCategoryBtn">
+                            <i class="fas fa-plus"></i> Add Category
+                        </button>
+                    </div>
+
+                    <!-- Data Management -->
+                    <div class="settings-card animate-card">
+                        <h3><i class="fas fa-database"></i> Data Management</h3>
+                        <div class="data-actions">
+                            <button class="data-btn" id="exportData">
+                                <i class="fas fa-download"></i>
+                                Export Data
+                            </button>
+                            <button class="data-btn" id="importData">
+                                <i class="fas fa-upload"></i>
+                                Import Data
+                            </button>
+                            <button class="data-btn danger" id="clearData">
+                                <i class="fas fa-trash"></i>
+                                Clear All Data
+                            </button>
+                        </div>
+                        <input type="file" id="importFile" accept=".json" hidden>
+                    </div>
+
+                    <!-- Notifications -->
+                    <div class="settings-card animate-card">
+                        <h3><i class="fas fa-bell"></i> Notifications</h3>
+                        <div class="toggle-group">
+                            <span>Budget Alerts</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="budgetAlerts" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-group">
+                            <span>Daily Reminders</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="dailyReminders">
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                        <div class="toggle-group">
+                            <span>Weekly Reports</span>
+                            <label class="toggle">
+                                <input type="checkbox" id="weeklyReports" checked>
+                                <span class="slider"></span>
+                            </label>
+                        </div>
+                    </div>
+
+                <!-- About Section with SVG Icons -->
+                <div class="settings-card about-section">
+                    <h3><i class="fas fa-info-circle"></i> About</h3>
+                    <div class="about-content">
+                        <div class="about-logo">
+                            <i class="fas fa-wallet"></i>
+                        </div>
+                        <h4>ExpenseFlow</h4>
+                        <p class="version">Version 1.0.0</p>
+                        <p class="description">
+                            A beautiful expense tracker for managing your finances.
+                        </p>
+                        <div class="social-links">
+                            <!-- GitHub -->
+                            <a href="#" class="social-link github" title="GitHub">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
+                                </svg>
+                            </a>
+                            <!-- Twitter/X -->
+                            <a href="#" class="social-link twitter" title="Twitter">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                                </svg>
+                            </a>
+                            <!-- LinkedIn -->
+                            <a href="#" class="social-link linkedin" title="LinkedIn">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                                </svg>
+                            </a>
+                            <!-- Facebook -->
+                            <a href="#" class="social-link facebook" title="Facebook">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                                    <path
+                                        d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
+                                </svg>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                </div>
+            </section>
+
+            <!-- ==================== BORROW PAGE ==================== -->
+            <section class="page" id="borrow">
+                <div class="page-header">
+                    <h1>Borrow & Lend</h1>
+                    <div class="borrow-actions">
+                        <button class="add-btn lend-btn" id="addLendBtn">
+                            <i class="fas fa-hand-holding-usd"></i>
+                            Money Given
+                        </button>
+                        <button class="add-btn borrow-btn" id="addBorrowBtn">
+                            <i class="fas fa-hands-helping"></i>
+                            Money Taken
+                        </button>
+                    </div>
+                </div>
+            
+                <!-- Borrow Summary Cards -->
+                <div class="borrow-summary">
+                    <div class="summary-card given animate-card">
+                        <div class="summary-icon">
+                            <i class="fas fa-arrow-up"></i>
+                        </div>
+                        <div class="summary-info">
+                            <h3>Total Given</h3>
+                            <p class="summary-value" id="totalGiven">$0.00</p>
+                            <span class="summary-count"><span id="givenCount">0</span> people</span>
+                        </div>
+                    </div>
+                    <div class="summary-card taken animate-card">
+                        <div class="summary-icon">
+                            <i class="fas fa-arrow-down"></i>
+                        </div>
+                        <div class="summary-info">
+                            <h3>Total Taken</h3>
+                            <p class="summary-value" id="totalTaken">$0.00</p>
+                            <span class="summary-count"><span id="takenCount">0</span> people</span>
+                        </div>
+                    </div>
+                    <div class="summary-card net animate-card">
+                        <div class="summary-icon">
+                            <i class="fas fa-balance-scale"></i>
+                        </div>
+                        <div class="summary-info">
+                            <h3>Net Balance</h3>
+                            <p class="summary-value" id="netBorrow">$0.00</p>
+                            <span class="summary-count">You'll receive</span>
+                        </div>
+                    </div>
+                    <div class="summary-card overdue animate-card">
+                        <div class="summary-icon">
+                            <i class="fas fa-exclamation-triangle"></i>
+                        </div>
+                        <div class="summary-info">
+                            <h3>Overdue</h3>
+                            <p class="summary-value" id="overdueAmount">$0.00</p>
+                            <span class="summary-count"><span id="overdueCount">0</span> pending</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <!-- Tabs for Given/Taken -->
+                <div class="borrow-tabs">
+                    <button class="tab-btn active" data-tab="given">
+                        <i class="fas fa-hand-holding-usd"></i>
+                        Money Given
+                    </button>
+                    <button class="tab-btn" data-tab="taken">
+                        <i class="fas fa-hands-helping"></i>
+                        Money Taken
+                    </button>
+                    <button class="tab-btn" data-tab="history">
+                        <i class="fas fa-history"></i>
+                        History
+                    </button>
+                </div>
+            
+                <!-- Given List -->
+                <div class="borrow-list-container tab-content active" id="givenTab">
+                    <div class="borrow-list" id="givenList">
+                        <!-- Given items will be inserted here -->
+                    </div>
+                </div>
+            
+                <!-- Taken List -->
+                <div class="borrow-list-container tab-content" id="takenTab">
+                    <div class="borrow-list" id="takenList">
+                        <!-- Taken items will be inserted here -->
+                    </div>
+                </div>
+            
+                <!-- History List -->
+                <div class="borrow-list-container tab-content" id="historyTab">
+                    <div class="borrow-list" id="borrowHistory">
+                        <!-- History items will be inserted here -->
+                    </div>
+                </div>
+            </section>
+            
+            <!-- ==================== FUTURE PURCHASES (WISHLIST) PAGE ==================== -->
+            <section class="page" id="wishlist">
+                <div class="page-header">
+                    <h1>Future Purchases</h1>
+                    <button class="add-btn" id="addWishlistBtn">
+                        <i class="fas fa-plus"></i>
+                        Add Item
+                    </button>
+                </div>
+            
+                <!-- Wishlist Summary -->
+                <div class="wishlist-summary">
+                    <div class="summary-card total animate-card">
+                        <div class="summary-icon">
+                            <i class="fas fa-shopping-cart"></i>
+                        </div>
+                        <div class="summary-info">
+                            <h3>Total Items</h3>
+                            <p class="summary-value" id="wishlistCount">0</p>
+                            <span class="summary-count">Items planned</span>
+                        </div>
+                    </div>
+                    <div class="summary-card cost animate-card">
+                        <div class="summary-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="summary-info">
+                            <h3>Total Cost</h3>
+                            <p class="summary-value" id="wishlistTotal">$0.00</p>
+                            <span class="summary-count">Estimated</span>
+                        </div>
+                    </div>
+                    <div class="summary-card saved animate-card">
+                        <div class="summary-icon">
+                            <i class="fas fa-piggy-bank"></i>
+                        </div>
+                        <div class="summary-info">
+                            <h3>Amount Saved</h3>
+                            <p class="summary-value" id="wishlistSaved">$0.00</p>
+                            <span class="summary-count">Towards goals</span>
+                        </div>
+                    </div>
+                    <div class="summary-card priority animate-card">
+                        <div class="summary-icon">
+                            <i class="fas fa-star"></i>
+                        </div>
+                        <div class="summary-info">
+                            <h3>High Priority</h3>
+                            <p class="summary-value" id="highPriorityCount">0</p>
+                            <span class="summary-count">Must buy soon</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <!-- Filter and Sort -->
+                <div class="wishlist-filters animate-card">
+                    <div class="filter-group">
+                        <label>Priority</label>
+                        <select id="wishlistPriorityFilter">
+                            <option value="all">All</option>
+                            <option value="high">High</option>
+                            <option value="medium">Medium</option>
+                            <option value="low">Low</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Category</label>
+                        <select id="wishlistCategoryFilter">
+                            <option value="all">All Categories</option>
+                            <option value="electronics">Electronics</option>
+                            <option value="clothing">Clothing</option>
+                            <option value="home">Home & Living</option>
+                            <option value="travel">Travel</option>
+                            <option value="education">Education</option>
+                            <option value="health">Health & Fitness</option>
+                            <option value="entertainment">Entertainment</option>
+                            <option value="other">Other</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Sort By</label>
+                        <select id="wishlistSort">
+                            <option value="priority">Priority</option>
+                            <option value="price-high">Price: High to Low</option>
+                            <option value="price-low">Price: Low to High</option>
+                            <option value="date">Target Date</option>
+                            <option value="progress">Progress</option>
+                        </select>
+                    </div>
+                    <div class="view-toggle">
+                        <button class="view-btn active" data-view="grid">
+                            <i class="fas fa-th-large"></i>
+                        </button>
+                        <button class="view-btn" data-view="list">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+            
+                <!-- Wishlist Grid -->
+                <div class="wishlist-grid" id="wishlistGrid">
+                    <!-- Wishlist items will be inserted here -->
+                </div>
+            </section>
+            
+            <!-- ==================== NOTES PAGE ==================== -->
+            <section class="page" id="notes">
+                <div class="page-header">
+                    <h1>Notes</h1>
+                    <button class="add-btn" id="addNoteBtn">
+                        <i class="fas fa-plus"></i>
+                        New Note
+                    </button>
+                </div>
+            
+                <!-- Notes Search and Filter -->
+                <div class="notes-toolbar animate-card">
+                    <div class="notes-search">
+                        <i class="fas fa-search"></i>
+                        <input type="text" id="notesSearch" placeholder="Search notes...">
+                    </div>
+                    <div class="notes-filters">
+                        <button class="filter-chip active" data-filter="all">All</button>
+                        <button class="filter-chip" data-filter="pinned">
+                            <i class="fas fa-thumbtack"></i> Pinned
+                        </button>
+                        <button class="filter-chip" data-filter="personal">Personal</button>
+                        <button class="filter-chip" data-filter="finance">Finance</button>
+                        <button class="filter-chip" data-filter="goals">Goals</button>
+                        <button class="filter-chip" data-filter="ideas">Ideas</button>
+                    </div>
+                    <div class="notes-view-toggle">
+                        <button class="view-btn active" data-view="grid">
+                            <i class="fas fa-th-large"></i>
+                        </button>
+                        <button class="view-btn" data-view="list">
+                            <i class="fas fa-list"></i>
+                        </button>
+                    </div>
+                </div>
+            
+                <!-- Pinned Notes -->
+                <div class="pinned-notes-section" id="pinnedSection">
+                    <h3><i class="fas fa-thumbtack"></i> Pinned</h3>
+                    <div class="notes-grid" id="pinnedNotes">
+                        <!-- Pinned notes will be inserted here -->
+                    </div>
+                </div>
+            
+                <!-- All Notes -->
+                <div class="all-notes-section">
+                    <h3><i class="fas fa-sticky-note"></i> All Notes</h3>
+                    <div class="notes-grid" id="notesGrid">
+                        <!-- Notes will be inserted here -->
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add Transaction Modal -->
+    <div class="modal" id="transactionModal">
+        <div class="modal-content animate-modal">
+            <div class="modal-header">
+                <h2 id="modalTitle">Add Transaction</h2>
+                <button class="close-btn" id="closeModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="transactionForm">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Type</label>
+                        <div class="type-selector">
+                            <button type="button" class="type-btn expense active" data-type="expense">
+                                <i class="fas fa-arrow-up"></i> Expense
+                            </button>
+                            <button type="button" class="type-btn income" data-type="income">
+                                <i class="fas fa-arrow-down"></i> Income
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <div class="amount-input">
+                            <span class="currency-symbol">$</span>
+                            <input type="number" id="transactionAmount" step="0.01" required placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="transactionDate" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Description</label>
+                    <input type="text" id="transactionDescription" required placeholder="Enter description">
+                </div>
+                <div class="form-group">
+                    <label>Category</label>
+                    <div class="category-grid" id="categoryGrid">
+                        <!-- Categories will be inserted here -->
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Notes (Optional)</label>
+                    <textarea id="transactionNotes" placeholder="Add any additional notes..."></textarea>
+                </div>
+                <div class="form-group">
+                    <label>Tags (Optional)</label>
+                    <input type="text" id="transactionTags" placeholder="Add tags separated by commas">
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="cancel-btn" id="cancelTransaction">Cancel</button>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-check"></i>
+                        Save Transaction
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Budget Modal -->
+    <div class="modal" id="budgetModal">
+        <div class="modal-content animate-modal">
+            <div class="modal-header">
+                <h2>Add Budget</h2>
+                <button class="close-btn" id="closeBudgetModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="budgetForm">
+                <div class="form-group">
+                    <label>Category</label>
+                    <select id="budgetCategory" required>
+                        <!-- Categories will be inserted here -->
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Budget Amount</label>
+                    <div class="amount-input">
+                        <span class="currency-symbol">$</span>
+                        <input type="number" id="budgetAmount" step="0.01" required placeholder="0.00">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Period</label>
+                    <select id="budgetPeriod" required>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly" selected>Monthly</option>
+                        <option value="yearly">Yearly</option>
+                    </select>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="cancel-btn" id="cancelBudget">Cancel</button>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-check"></i>
+                        Save Budget
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Add Category Modal -->
+    <div class="modal" id="categoryModal">
+        <div class="modal-content animate-modal small">
+            <div class="modal-header">
+                <h2>Add Category</h2>
+                <button class="close-btn" id="closeCategoryModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="categoryForm">
+                <div class="form-group">
+                    <label>Category Name</label>
+                    <input type="text" id="categoryName" required placeholder="Enter category name">
+                </div>
+                <div class="form-group">
+                    <label>Icon</label>
+                    <div class="icon-grid" id="iconGrid">
+                        <!-- Icons will be inserted here -->
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Color</label>
+                    <div class="color-grid" id="colorGrid">
+                        <!-- Colors will be inserted here -->
+                    </div>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="cancel-btn" id="cancelCategory">Cancel</button>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-check"></i>
+                        Save Category
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==================== BORROW MODAL ==================== -->
+    <div class="modal" id="borrowModal">
+        <div class="modal-content animate-modal">
+            <div class="modal-header">
+                <h2 id="borrowModalTitle">Add Record</h2>
+                <button class="close-btn" id="closeBorrowModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="borrowForm">
+                <input type="hidden" id="borrowType" value="given">
+                <input type="hidden" id="borrowId" value="">
+    
+                <div class="form-group">
+                    <label>Person Name</label>
+                    <div class="input-with-icon">
+                        <i class="fas fa-user"></i>
+                        <input type="text" id="borrowPerson" required placeholder="Enter person's name">
+                    </div>
+                </div>
+    
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <div class="amount-input">
+                            <span class="currency-symbol">$</span>
+                            <input type="number" id="borrowAmount" step="0.01" required placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="borrowDate" required>
+                    </div>
+                </div>
+    
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Expected Return Date</label>
+                        <input type="date" id="borrowDueDate">
+                    </div>
+                    <div class="form-group">
+                        <label>Interest Rate (% per month)</label>
+                        <input type="number" id="borrowInterest" step="0.1" placeholder="0">
+                    </div>
+                </div>
+    
+                <div class="form-group">
+                    <label>Reason/Purpose</label>
+                    <input type="text" id="borrowReason" placeholder="What is it for?">
+                </div>
+    
+                <div class="form-group">
+                    <label>Contact (Phone/Email)</label>
+                    <input type="text" id="borrowContact" placeholder="Contact information">
+                </div>
+    
+                <div class="form-group">
+                    <label>Notes</label>
+                    <textarea id="borrowNotes" placeholder="Additional notes..."></textarea>
+                </div>
+    
+                <div class="form-group">
+                    <label>Status</label>
+                    <div class="status-selector">
+                        <button type="button" class="status-btn active" data-status="pending">
+                            <i class="fas fa-clock"></i> Pending
+                        </button>
+                        <button type="button" class="status-btn" data-status="partial">
+                            <i class="fas fa-adjust"></i> Partial
+                        </button>
+                        <button type="button" class="status-btn" data-status="completed">
+                            <i class="fas fa-check"></i> Completed
+                        </button>
+                    </div>
+                </div>
+    
+                <div class="form-group partial-payment-section" style="display: none;">
+                    <label>Amount Paid/Received</label>
+                    <div class="amount-input">
+                        <span class="currency-symbol">$</span>
+                        <input type="number" id="borrowPaidAmount" step="0.01" placeholder="0.00">
+                    </div>
+                </div>
+    
+                <div class="form-actions">
+                    <button type="button" class="cancel-btn" id="cancelBorrow">Cancel</button>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-check"></i>
+                        Save Record
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- ==================== PAYMENT HISTORY MODAL ==================== -->
+    <div class="modal" id="paymentModal">
+        <div class="modal-content animate-modal">
+            <div class="modal-header">
+                <h2>Payment History</h2>
+                <button class="close-btn" id="closePaymentModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="payment-details" id="paymentDetails">
+                <!-- Payment details will be inserted here -->
+            </div>
+            <div class="payment-history-list" id="paymentHistoryList">
+                <!-- Payment history will be inserted here -->
+            </div>
+            <form id="addPaymentForm" class="add-payment-form">
+                <h4>Record Payment</h4>
+                <input type="hidden" id="paymentBorrowId">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Amount</label>
+                        <div class="amount-input">
+                            <span class="currency-symbol">$</span>
+                            <input type="number" id="paymentAmount" step="0.01" required placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Date</label>
+                        <input type="date" id="paymentDate" required>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Note</label>
+                    <input type="text" id="paymentNote" placeholder="Payment note...">
+                </div>
+                <button type="submit" class="submit-btn full-width">
+                    <i class="fas fa-plus"></i> Add Payment
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- ==================== WISHLIST MODAL ==================== -->
+    <div class="modal" id="wishlistModal">
+        <div class="modal-content animate-modal">
+            <div class="modal-header">
+                <h2 id="wishlistModalTitle">Add Future Purchase</h2>
+                <button class="close-btn" id="closeWishlistModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="wishlistForm">
+                <input type="hidden" id="wishlistItemId" value="">
+    
+                <div class="form-group">
+                    <label>Item Name</label>
+                    <input type="text" id="wishlistName" required placeholder="What do you want to buy?">
+                </div>
+    
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Estimated Price</label>
+                        <div class="amount-input">
+                            <span class="currency-symbol">$</span>
+                            <input type="number" id="wishlistPrice" step="0.01" required placeholder="0.00">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Amount Saved</label>
+                        <div class="amount-input">
+                            <span class="currency-symbol">$</span>
+                            <input type="number" id="wishlistSavedAmount" step="0.01" placeholder="0.00">
+                        </div>
+                    </div>
+                </div>
+    
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="wishlistCategory" required>
+                            <option value="electronics">📱 Electronics</option>
+                            <option value="clothing">👕 Clothing</option>
+                            <option value="home">🏠 Home & Living</option>
+                            <option value="travel">✈️ Travel</option>
+                            <option value="education">📚 Education</option>
+                            <option value="health">💪 Health & Fitness</option>
+                            <option value="entertainment">🎮 Entertainment</option>
+                            <option value="vehicle">🚗 Vehicle</option>
+                            <option value="other">📦 Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Priority</label>
+                        <select id="wishlistPriority" required>
+                            <option value="high">🔴 High</option>
+                            <option value="medium">🟡 Medium</option>
+                            <option value="low">🟢 Low</option>
+                        </select>
+                    </div>
+                </div>
+    
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Target Purchase Date</label>
+                        <input type="date" id="wishlistTargetDate">
+                    </div>
+                    <div class="form-group">
+                        <label>Link/URL (Optional)</label>
+                        <input type="url" id="wishlistLink" placeholder="https://...">
+                    </div>
+                </div>
+    
+                <div class="form-group">
+                    <label>Description/Notes</label>
+                    <textarea id="wishlistDescription" placeholder="Why do you want this? Any specific details?"></textarea>
+                </div>
+    
+                <div class="form-group">
+                    <label>Image URL (Optional)</label>
+                    <input type="url" id="wishlistImage" placeholder="https://...">
+                    <div class="image-preview" id="wishlistImagePreview"></div>
+                </div>
+    
+                <div class="form-actions">
+                    <button type="button" class="cancel-btn" id="cancelWishlist">Cancel</button>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-check"></i>
+                        Save Item
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- ==================== NOTES MODAL ==================== -->
+    <div class="modal" id="noteModal">
+        <div class="modal-content animate-modal large">
+            <div class="modal-header">
+                <h2 id="noteModalTitle">New Note</h2>
+                <button class="close-btn" id="closeNoteModal">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <form id="noteForm">
+                <input type="hidden" id="noteId" value="">
+    
+                <div class="form-group">
+                    <label>Title</label>
+                    <input type="text" id="noteTitle" required placeholder="Note title...">
+                </div>
+    
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>Category</label>
+                        <select id="noteCategory">
+                            <option value="personal">🏠 Personal</option>
+                            <option value="finance">💰 Finance</option>
+                            <option value="goals">🎯 Goals</option>
+                            <option value="ideas">💡 Ideas</option>
+                            <option value="reminders">⏰ Reminders</option>
+                            <option value="other">📝 Other</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Color</label>
+                        <div class="note-colors" id="noteColors">
+                            <button type="button" class="note-color active" data-color="#fff9c4"
+                                style="background: #fff9c4"></button>
+                            <button type="button" class="note-color" data-color="#f8bbd9"
+                                style="background: #f8bbd9"></button>
+                            <button type="button" class="note-color" data-color="#c5e1a5"
+                                style="background: #c5e1a5"></button>
+                            <button type="button" class="note-color" data-color="#b3e5fc"
+                                style="background: #b3e5fc"></button>
+                            <button type="button" class="note-color" data-color="#d1c4e9"
+                                style="background: #d1c4e9"></button>
+                            <button type="button" class="note-color" data-color="#ffccbc"
+                                style="background: #ffccbc"></button>
+                            <button type="button" class="note-color" data-color="#ffffff"
+                                style="background: #ffffff"></button>
+                        </div>
+                    </div>
+                </div>
+    
+                <div class="form-group">
+                    <label>Content</label>
+                    <div class="note-editor">
+                        <div class="editor-toolbar">
+                            <button type="button" class="editor-btn" data-command="bold">
+                                <i class="fas fa-bold"></i>
+                            </button>
+                            <button type="button" class="editor-btn" data-command="italic">
+                                <i class="fas fa-italic"></i>
+                            </button>
+                            <button type="button" class="editor-btn" data-command="underline">
+                                <i class="fas fa-underline"></i>
+                            </button>
+                            <span class="separator"></span>
+                            <button type="button" class="editor-btn" data-command="insertUnorderedList">
+                                <i class="fas fa-list-ul"></i>
+                            </button>
+                            <button type="button" class="editor-btn" data-command="insertOrderedList">
+                                <i class="fas fa-list-ol"></i>
+                            </button>
+                            <span class="separator"></span>
+                            <button type="button" class="editor-btn" data-command="createLink">
+                                <i class="fas fa-link"></i>
+                            </button>
+                        </div>
+                        <div class="editor-content" id="noteContent" contenteditable="true"
+                            placeholder="Write your note here..."></div>
+                    </div>
+                </div>
+    
+                <div class="form-group">
+                    <label>Tags</label>
+                    <input type="text" id="noteTags" placeholder="Add tags separated by commas">
+                </div>
+    
+                <div class="form-group checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="notePinned">
+                        <span class="checkmark"></span>
+                        <i class="fas fa-thumbtack"></i> Pin this note
+                    </label>
+                </div>
+    
+                <div class="form-actions">
+                    <button type="button" class="cancel-btn" id="cancelNote">Cancel</button>
+                    <button type="submit" class="submit-btn">
+                        <i class="fas fa-check"></i>
+                        Save Note
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- ==================== VIEW NOTE MODAL ==================== -->
+    <div class="modal" id="viewNoteModal">
+        <div class="modal-content animate-modal large">
+            <div class="modal-header" id="viewNoteHeader">
+                <h2 id="viewNoteTitle">Note Title</h2>
+                <div class="note-actions">
+                    <button class="icon-btn" id="editNoteBtn" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="icon-btn" id="pinNoteBtn" title="Pin">
+                        <i class="fas fa-thumbtack"></i>
+                    </button>
+                    <button class="icon-btn danger" id="deleteNoteBtn" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                    <button class="close-btn" id="closeViewNoteModal">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="view-note-content" id="viewNoteContent">
+                <!-- Note content will be displayed here -->
+            </div>
+            <div class="view-note-footer">
+                <span class="note-category" id="viewNoteCategory"></span>
+                <span class="note-date" id="viewNoteDate"></span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Panel -->
+    <div class="notification-panel" id="notificationPanel">
+        <div class="notification-header">
+            <h3>Notifications</h3>
+            <button id="clearNotifications">Clear All</button>
+        </div>
+        <div class="notification-list" id="notificationList">
+            <!-- Notifications will be inserted here -->
+        </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <!-- Scripts -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
+    <script src="js/storage.js"></script>
+    <script src="js/utils.js"></script>
+    <script src="js/charts.js"></script>
+    <script src="js/app.js"></script>
+    <script>
+        // Authentication check and app initialization
+        auth.onAuthStateChanged(async (user) => {
+            if (!user) {
+                // Not logged in - redirect to login
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // Initialize storage with user ID
+            await Storage.init(user.uid);
+
+            // Update user name in UI
+            const userNameElements = document.querySelectorAll('#userName, .user-name');
+            userNameElements.forEach(el => {
+                if (el) el.textContent = user.displayName || 'User';
+            });
+
+            // Update user email
+            const userEmailElements = document.querySelectorAll('#userEmail, .user-email');
+            userEmailElements.forEach(el => {
+                if (el) el.textContent = user.email || '';
+            });
+
+            // Initialize app
+            if (typeof App !== 'undefined' && App.init) {
+                await App.init();
+            }
+        });
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                Storage.cleanup(); // Clear listeners
+                auth.signOut().then(() => {
+                    window.location.href = 'index.html';
+                }).catch(error => {
+                    console.error('Logout error:', error);
+                    alert('Logout failed. Please try again.');
+                });
+            }
+        }
+    </script>
+
+</body>
+
+</html>

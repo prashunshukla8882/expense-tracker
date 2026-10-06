@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExpenseFlow - Login</title>
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>💰</text></svg>">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .auth-container {
+            background: white;
+            padding: 40px;
+            border-radius: 24px;
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.25);
+            width: 100%;
+            max-width: 420px;
+            animation: slideUp 0.5s ease;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .logo {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 25px;
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .logo i {
+            font-size: 2.5rem;
+            color: white;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 1.8rem;
+            color: #1e293b;
+            margin-bottom: 8px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #64748b;
+            margin-bottom: 30px;
+            font-size: 0.95rem;
+        }
+
+        .tabs {
+            display: flex;
+            margin-bottom: 30px;
+            background: #f1f5f9;
+            border-radius: 12px;
+            padding: 5px;
+        }
+
+        .tab-btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            background: transparent;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: #64748b;
+            cursor: pointer;
+            border-radius: 10px;
+            transition: all 0.3s;
+        }
+
+        .tab-btn.active {
+            background: white;
+            color: #667eea;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .form-container {
+            display: none;
+        }
+
+        .form-container.active {
+            display: block;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+
+            to {
+                opacity: 1;
+            }
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        .form-group label i {
+            margin-right: 8px;
+            color: #667eea;
+        }
+
+        .input-wrapper {
+            position: relative;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 14px 16px;
+            padding-right: 45px;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-family: inherit;
+            transition: all 0.3s;
+            background: #f9fafb;
+        }
+
+        .form-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: white;
+            box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.1);
+        }
+
+        .toggle-password {
+            position: absolute;
+            right: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: #94a3b8;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        .toggle-password:hover {
+            color: #667eea;
+        }
+
+        .auth-btn {
+            width: 100%;
+            padding: 16px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+
+        .auth-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(102, 126, 234, 0.4);
+        }
+
+        .auth-btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .auth-btn .spinner {
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        .auth-btn.loading .btn-text {
+            display: none;
+        }
+
+        .auth-btn.loading .spinner {
+            display: block;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            margin: 25px 0;
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: #e5e7eb;
+        }
+
+        .divider span {
+            padding: 0 15px;
+        }
+
+        .google-btn {
+            width: 100%;
+            padding: 14px;
+            background: white;
+            border: 2px solid #e5e7eb;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-family: inherit;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: #374151;
+        }
+
+        .google-btn:hover {
+            border-color: #667eea;
+            background: #f9fafb;
+        }
+
+        .google-btn img {
+            width: 20px;
+            height: 20px;
+        }
+
+        .message {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .message.error {
+            background: #fef2f2;
+            color: #dc2626;
+            display: flex;
+        }
+
+        .message.success {
+            background: #f0fdf4;
+            color: #16a34a;
+            display: flex;
+        }
+
+        .forgot-link {
+            display: block;
+            text-align: right;
+            margin-top: -10px;
+            margin-bottom: 20px;
+            color: #667eea;
+            font-size: 0.85rem;
+            text-decoration: none;
+        }
+
+        .forgot-link:hover {
+            text-decoration: underline;
+        }
+
+        .footer-text {
+            text-align: center;
+            margin-top: 25px;
+            padding-top: 25px;
+            border-top: 1px solid #e5e7eb;
+            color: #94a3b8;
+            font-size: 0.85rem;
+        }
+
+        .footer-text i {
+            color: #667eea;
+        }
+
+        /* Reset Password Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            padding: 30px;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 400px;
+            animation: slideUp 0.3s ease;
+        }
+
+        .modal h2 {
+            font-size: 1.3rem;
+            margin-bottom: 10px;
+            color: #1e293b;
+        }
+
+        .modal p {
+            color: #64748b;
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .modal-buttons button {
+            flex: 1;
+            padding: 12px;
+            border-radius: 10px;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .modal-buttons .cancel-btn {
+            background: #f1f5f9;
+            border: none;
+            color: #64748b;
+        }
+
+        .modal-buttons .submit-btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            color: white;
+        }
+
+        /* Loading overlay */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 9999;
+        }
+
+        .loading-overlay.hidden {
+            display: none;
+        }
+
+        .loading-logo {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            animation: pulse 1.5s infinite;
+        }
+
+        .loading-logo i {
+            font-size: 3rem;
+            color: #667eea;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        .loading-text {
+            color: white;
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Loading Overlay -->
+    <div class="loading-overlay" id="loadingOverlay">
+        <div class="loading-logo">
+            <i class="fas fa-wallet"></i>
+        </div>
+        <div class="loading-text">Loading ExpenseFlow...</div>
+    </div>
+
+    <div class="auth-container" id="authContainer" style="display: none;">
+        <div class="logo">
+            <i class="fas fa-wallet"></i>
+        </div>
+        <h1>ExpenseFlow</h1>
+        <p class="subtitle">Manage your finances smartly</p>
+
+        <!-- Tabs -->
+        <div class="tabs">
+            <button class="tab-btn active" data-tab="login">Login</button>
+            <button class="tab-btn" data-tab="signup">Sign Up</button>
+        </div>
+
+        <!-- Error/Success Message -->
+        <div class="message" id="message">
+            <i class="fas fa-info-circle"></i>
+            <span id="messageText"></span>
+        </div>
+
+        <!-- Login Form -->
+        <div class="form-container active" id="loginForm">
+            <form id="loginFormElement">
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i>Email</label>
+                    <input type="email" id="loginEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i>Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="loginPassword" placeholder="Enter your password" required>
+                        <button type="button" class="toggle-password" onclick="togglePassword('loginPassword', this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <a href="#" class="forgot-link" onclick="showResetModal(); return false;">Forgot Password?</a>
+                <button type="submit" class="auth-btn" id="loginBtn">
+                    <span class="btn-text">Login</span>
+                    <div class="spinner"></div>
+                </button>
+            </form>
+
+            <div class="divider"><span>or</span></div>
+
+            <button class="google-btn" id="googleLoginBtn">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                Continue with Google
+            </button>
+        </div>
+
+        <!-- Signup Form -->
+        <div class="form-container" id="signupForm">
+            <form id="signupFormElement">
+                <div class="form-group">
+                    <label><i class="fas fa-user"></i>Full Name</label>
+                    <input type="text" id="signupName" placeholder="Enter your name" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-envelope"></i>Email</label>
+                    <input type="email" id="signupEmail" placeholder="Enter your email" required>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i>Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="signupPassword" placeholder="Min 6 characters" required
+                            minlength="6">
+                        <button type="button" class="toggle-password" onclick="togglePassword('signupPassword', this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label><i class="fas fa-lock"></i>Confirm Password</label>
+                    <div class="input-wrapper">
+                        <input type="password" id="signupConfirmPassword" placeholder="Confirm password" required>
+                        <button type="button" class="toggle-password"
+                            onclick="togglePassword('signupConfirmPassword', this)">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="auth-btn" id="signupBtn">
+                    <span class="btn-text">Create Account</span>
+                    <div class="spinner"></div>
+                </button>
+            </form>
+
+            <div class="divider"><span>or</span></div>
+
+            <button class="google-btn" id="googleSignupBtn">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google">
+                Sign up with Google
+            </button>
+        </div>
+
+        <div class="footer-text">
+            <i class="fas fa-shield-alt"></i> Secured by Firebase
+        </div>
+    </div>
+
+    <!-- Reset Password Modal -->
+    <div class="modal-overlay" id="resetModal">
+        <div class="modal">
+            <h2><i class="fas fa-key"></i> Reset Password</h2>
+            <p>Enter your email and we'll send you a reset link.</p>
+            <div class="form-group">
+                <input type="email" id="resetEmail" placeholder="Enter your email">
+            </div>
+            <div class="modal-buttons">
+                <button class="cancel-btn" onclick="hideResetModal()">Cancel</button>
+                <button class="submit-btn" onclick="sendResetEmail()">Send Link</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Firebase SDK (Use compat version for simpler syntax) -->
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+
+    <script>
+        // ╔═══════════════════════════════════════════════════════════════╗
+        // ║  🔥 YOUR FIREBASE CONFIGURATION                               ║
+        // ╚═══════════════════════════════════════════════════════════════╝
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyBJzqUTVi8osOot5Ju_NT2LTbIZueQa_iI",
+            authDomain: "expense-tracker-8bbaa.firebaseapp.com",
+            projectId: "expense-tracker-8bbaa",
+            storageBucket: "expense-tracker-8bbaa.firebasestorage.app",
+            messagingSenderId: "39805734943",
+            appId: "1:39805734943:web:4bae3e76c1c14f53ed052a"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const auth = firebase.auth();
+        const db = firebase.firestore();
+
+        // ═══════════════════════════════════════════════════════════════
+
+        // Check authentication state
+        auth.onAuthStateChanged(user => {
+            const loadingOverlay = document.getElementById('loadingOverlay');
+            const authContainer = document.getElementById('authContainer');
+
+            if (user) {
+                // User is logged in - redirect to app
+                window.location.href = 'app.html';
+            } else {
+                // User not logged in - show auth form
+                loadingOverlay.classList.add('hidden');
+                authContainer.style.display = 'block';
+            }
+        });
+
+        // Tab switching
+        document.querySelectorAll('.tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+                document.querySelectorAll('.form-container').forEach(f => f.classList.remove('active'));
+                btn.classList.add('active');
+                document.getElementById(btn.dataset.tab + 'Form').classList.add('active');
+                hideMessage();
+            });
+        });
+
+        // Toggle password visibility
+        function togglePassword(inputId, btn) {
+            const input = document.getElementById(inputId);
+            const icon = btn.querySelector('i');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
+        // Show/hide message
+        function showMessage(text, type) {
+            const msg = document.getElementById('message');
+            const msgText = document.getElementById('messageText');
+            msg.className = 'message ' + type;
+            msgText.textContent = text;
+        }
+
+        function hideMessage() {
+            document.getElementById('message').className = 'message';
+        }
+
+        // Set loading state
+        function setLoading(btnId, loading) {
+            const btn = document.getElementById(btnId);
+            if (loading) {
+                btn.classList.add('loading');
+                btn.disabled = true;
+            } else {
+                btn.classList.remove('loading');
+                btn.disabled = false;
+            }
+        }
+
+        // Login with Email/Password
+        document.getElementById('loginFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideMessage();
+            setLoading('loginBtn', true);
+
+            const email = document.getElementById('loginEmail').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                showMessage('Login successful! Redirecting...', 'success');
+            } catch (error) {
+                console.error(error);
+                let errorMsg = 'Login failed. Please try again.';
+                switch (error.code) {
+                    case 'auth/user-not-found':
+                        errorMsg = 'No account found with this email.';
+                        break;
+                    case 'auth/wrong-password':
+                        errorMsg = 'Incorrect password.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMsg = 'Invalid email address.';
+                        break;
+                    case 'auth/too-many-requests':
+                        errorMsg = 'Too many attempts. Try again later.';
+                        break;
+                    case 'auth/invalid-credential':
+                        errorMsg = 'Invalid email or password.';
+                        break;
+                }
+                showMessage(errorMsg, 'error');
+                setLoading('loginBtn', false);
+            }
+        });
+
+        // Signup with Email/Password
+        document.getElementById('signupFormElement').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            hideMessage();
+
+            const name = document.getElementById('signupName').value.trim();
+            const email = document.getElementById('signupEmail').value.trim();
+            const password = document.getElementById('signupPassword').value;
+            const confirmPassword = document.getElementById('signupConfirmPassword').value;
+
+            // Validation
+            if (password !== confirmPassword) {
+                showMessage('Passwords do not match!', 'error');
+                return;
+            }
+
+            if (password.length < 6) {
+                showMessage('Password must be at least 6 characters.', 'error');
+                return;
+            }
+
+            setLoading('signupBtn', true);
+
+            try {
+                // Create user
+                const userCredential = await auth.createUserWithEmailAndPassword(email, password);
+
+                // Update profile with name
+                await userCredential.user.updateProfile({
+                    displayName: name
+                });
+
+                // Create user document in Firestore
+                await db.collection('users').doc(userCredential.user.uid).set({
+                    name: name,
+                    email: email,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    settings: {
+                        currency: 'INR',
+                        currencySymbol: '₹',
+                        theme: 'light',
+                        budgetAlerts: true
+                    }
+                });
+
+                // Create default categories
+                const defaultCategories = [
+                    { id: 'food', name: 'Food & Dining', icon: 'fa-utensils', color: '#ef4444' },
+                    { id: 'transport', name: 'Transportation', icon: 'fa-car', color: '#f59e0b' },
+                    { id: 'shopping', name: 'Shopping', icon: 'fa-shopping-bag', color: '#8b5cf6' },
+                    { id: 'bills', name: 'Bills & Utilities', icon: 'fa-file-invoice', color: '#3b82f6' },
+                    { id: 'entertainment', name: 'Entertainment', icon: 'fa-gamepad', color: '#ec4899' },
+                    { id: 'health', name: 'Healthcare', icon: 'fa-heartbeat', color: '#10b981' },
+                    { id: 'salary', name: 'Salary', icon: 'fa-briefcase', color: '#22c55e' },
+                    { id: 'freelance', name: 'Freelance', icon: 'fa-laptop', color: '#06b6d4' },
+                    { id: 'other', name: 'Other', icon: 'fa-ellipsis-h', color: '#64748b' }
+                ];
+
+                const batch = db.batch();
+                for (const cat of defaultCategories) {
+                    const ref = db.collection('users').doc(userCredential.user.uid)
+                        .collection('categories').doc(cat.id);
+                    batch.set(ref, cat);
+                }
+                await batch.commit();
+
+                showMessage('Account created! Redirecting...', 'success');
+
+            } catch (error) {
+                console.error(error);
+                let errorMsg = 'Signup failed. Please try again.';
+                switch (error.code) {
+                    case 'auth/email-already-in-use':
+                        errorMsg = 'An account with this email already exists.';
+                        break;
+                    case 'auth/invalid-email':
+                        errorMsg = 'Invalid email address.';
+                        break;
+                    case 'auth/weak-password':
+                        errorMsg = 'Password is too weak.';
+                        break;
+                }
+                showMessage(errorMsg, 'error');
+                setLoading('signupBtn', false);
+            }
+        });
+
+        // Google Sign In
+        async function googleSignIn() {
+            const provider = new firebase.auth.GoogleAuthProvider();
+
+            try {
+                const result = await auth.signInWithPopup(provider);
+
+                // Check if new user
+                if (result.additionalUserInfo?.isNewUser) {
+                    // Create user document
+                    await db.collection('users').doc(result.user.uid).set({
+                        name: result.user.displayName || 'User',
+                        email: result.user.email,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                        settings: {
+                            currency: 'INR',
+                            currencySymbol: '₹',
+                            theme: 'light',
+                            budgetAlerts: true
+                        }
+                    });
+
+                    // Create default categories
+                    const defaultCategories = [
+                        { id: 'food', name: 'Food & Dining', icon: 'fa-utensils', color: '#ef4444' },
+                        { id: 'transport', name: 'Transportation', icon: 'fa-car', color: '#f59e0b' },
+                        { id: 'shopping', name: 'Shopping', icon: 'fa-shopping-bag', color: '#8b5cf6' },
+                        { id: 'bills', name: 'Bills & Utilities', icon: 'fa-file-invoice', color: '#3b82f6' },
+                        { id: 'entertainment', name: 'Entertainment', icon: 'fa-gamepad', color: '#ec4899' },
+                        { id: 'health', name: 'Healthcare', icon: 'fa-heartbeat', color: '#10b981' },
+                        { id: 'salary', name: 'Salary', icon: 'fa-briefcase', color: '#22c55e' },
+                        { id: 'freelance', name: 'Freelance', icon: 'fa-laptop', color: '#06b6d4' },
+                        { id: 'other', name: 'Other', icon: 'fa-ellipsis-h', color: '#64748b' }
+                    ];
+
+                    const batch = db.batch();
+                    for (const cat of defaultCategories) {
+                        const ref = db.collection('users').doc(result.user.uid)
+                            .collection('categories').doc(cat.id);
+                        batch.set(ref, cat);
+                    }
+                    await batch.commit();
+                }
+
+                // Redirect happens automatically via onAuthStateChanged
+
+            } catch (error) {
+                console.error(error);
+                if (error.code !== 'auth/popup-closed-by-user') {
+                    showMessage('Google sign in failed. Try again.', 'error');
+                }
+            }
+        }
+
+        document.getElementById('googleLoginBtn').addEventListener('click', googleSignIn);
+        document.getElementById('googleSignupBtn').addEventListener('click', googleSignIn);
+
+        // Reset Password Modal
+        function showResetModal() {
+            document.getElementById('resetModal').classList.add('active');
+        }
+
+        function hideResetModal() {
+            document.getElementById('resetModal').classList.remove('active');
+            document.getElementById('resetEmail').value = '';
+        }
+
+        async function sendResetEmail() {
+            const email = document.getElementById('resetEmail').value.trim();
+
+            if (!email) {
+                alert('Please enter your email');
+                return;
+            }
+
+            try {
+                await auth.sendPasswordResetEmail(email);
+                hideResetModal();
+                showMessage('Password reset link sent to your email!', 'success');
+            } catch (error) {
+                console.error(error);
+                let errorMsg = 'Failed to send reset email.';
+                if (error.code === 'auth/user-not-found') {
+                    errorMsg = 'No account found with this email.';
+                }
+                alert(errorMsg);
+            }
+        }
+
+        // Close modal on outside click
+        document.getElementById('resetModal').addEventListener('click', (e) => {
+            if (e.target.id === 'resetModal') {
+                hideResetModal();
+            }
+        });
+    </script>
+</body>
+
+</html>
