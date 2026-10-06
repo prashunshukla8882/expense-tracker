@@ -1762,55 +1762,85 @@ const App = {
     this.updateNotificationBadge();
   },
 
-  loadNotifications() {
-    const container = document.getElementById("notificationList");
-    if (!container) return;
-
-    const notifications = Storage.getNotifications();
-    this.updateNotificationBadge();
-
-    if (notifications.length === 0) {
-      container.innerHTML = `
-                <div class="empty-message">
+  async loadNotifications() {
+    const list = document.getElementById('notificationList');
+    const badge = document.getElementById('notificationBadge');
+    
+    if (!list) return;
+    
+    try {
+        const notifications = await Storage.getNotifications();
+        
+        // Ensure notifications is an array
+        const notificationArray = Array.isArray(notifications) ? notifications : [];
+        
+        const unreadCount = notificationArray.filter(n => !n.read).length;
+        
+        // Update badge
+        if (badge) {
+            badge.textContent = unreadCount > 0 ? unreadCount : '';
+            badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+        }
+        
+        if (notificationArray.length === 0) {
+            list.innerHTML = `
+                <div class="empty-notifications">
                     <i class="fas fa-bell-slash"></i>
                     <p>No notifications</p>
                 </div>
             `;
-      return;
-    }
-
-    container.innerHTML = notifications
-      .map(
-        (n) => `
-            <div class="notification-item ${n.read ? "" : "unread"}" onclick="App.markNotificationRead('${n.id}')">
-                <div class="notification-icon ${n.type}">
-                    <i class="fas ${n.icon}"></i>
+            return;
+        }
+        
+        list.innerHTML = notificationArray.map(n => `
+            <div class="notification-item ${n.read ? '' : 'unread'}" onclick="App.markNotificationRead('${n.id}')">
+                <div class="notification-icon ${n.type || 'info'}">
+                    <i class="fas ${this.getNotificationIcon(n.type)}"></i>
                 </div>
                 <div class="notification-content">
-                    <h4>${n.title}</h4>
-                    <p>${n.message}</p>
-                    <time>${Utils.getRelativeTime(n.createdAt)}</time>
+                    <h5>${n.title || 'Notification'}</h5>
+                    <p>${n.message || ''}</p>
+                    <span class="time">${Utils.getRelativeTime(n.createdAt || new Date())}</span>
                 </div>
             </div>
-        `,
-      )
-      .join("");
-  },
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+        list.innerHTML = `
+            <div class="empty-notifications">
+                <i class="fas fa-bell-slash"></i>
+                <p>No notifications</p>
+            </div>
+        `;
+    }
+},
 
   markNotificationRead(id) {
     Storage.markNotificationRead(id);
     this.loadNotifications();
   },
 
-  updateNotificationBadge() {
-    const badge = document.getElementById("notificationBadge");
-    if (badge) {
-      const notifications = Storage.getNotifications();
-      const unreadCount = notifications.filter((n) => !n.read).length;
-      badge.textContent = unreadCount;
-      badge.style.display = unreadCount > 0 ? "flex" : "none";
+  async updateNotificationBadge() {
+    const badge = document.getElementById('notificationBadge');
+    if (!badge) return;
+    
+    try {
+        const notifications = await Storage.getNotifications();
+        
+        // Ensure notifications is an array
+        const notificationArray = Array.isArray(notifications) ? notifications : [];
+        
+        const unreadCount = notificationArray.filter(n => !n.read).length;
+        
+        badge.textContent = unreadCount > 0 ? unreadCount : '';
+        badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+        
+    } catch (error) {
+        console.error('Error updating notification badge:', error);
+        badge.style.display = 'none';
     }
-    },
+},
   
   // ==================== NOTIFICATION FUNCTIONS ====================
 toggleNotifications() {
@@ -1824,9 +1854,11 @@ toggleNotifications() {
     
     // Toggle notification dropdown
     if (dropdown) {
+        const isOpen = dropdown.classList.contains('show');
         dropdown.classList.toggle('show');
         
-        if (dropdown.classList.contains('show')) {
+        // Load notifications when opening
+        if (!isOpen) {
             this.loadNotifications();
         }
     }
@@ -1887,6 +1919,7 @@ getNotificationIcon(type) {
         success: 'fa-check-circle',
         warning: 'fa-exclamation-triangle',
         danger: 'fa-times-circle',
+        error: 'fa-times-circle',
         info: 'fa-info-circle'
     };
     return icons[type] || 'fa-bell';

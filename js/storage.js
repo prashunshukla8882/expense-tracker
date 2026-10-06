@@ -463,17 +463,21 @@ const Storage = {
 
     // ==================== NOTIFICATIONS ====================
     async getNotifications() {
-        try {
-            const snapshot = await this.getUserCollection('notifications')
-                .orderBy('createdAt', 'desc')
-                .limit(50)
-                .get();
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        } catch (error) {
-            console.error('Error getting notifications:', error);
-            return [];
-        }
-    },
+    try {
+        const collection = this.getUserCollection('notifications');
+        if (!collection) return [];
+        
+        const snapshot = await collection
+            .orderBy('createdAt', 'desc')
+            .limit(50)
+            .get();
+            
+        return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    } catch (error) {
+        console.error('Error getting notifications:', error);
+        return []; // Return empty array on error
+    }
+},
 
     async addNotification(notification) {
         try {
