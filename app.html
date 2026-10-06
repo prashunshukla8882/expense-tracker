@@ -136,9 +136,58 @@
                         <i class="fas fa-bell"></i>
                         <span class="badge" id="notificationBadge">3</span>
                     </button>
-                    <div class="user-profile">
-                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=user" alt="User">
-                        <span id="userName">User</span>
+                    <!-- User Profile Section in Header -->
+                    <div class="header-right">
+                        <!-- Notification Bell -->
+                        <div class="notification-wrapper" id="notificationWrapper">
+                            <button class="notification-btn" id="notificationBtn" onclick="App.toggleNotifications()">
+                                <i class="fas fa-bell"></i>
+                                <span class="notification-badge" id="notificationBadge">0</span>
+                            </button>
+                    
+                            <!-- Notification Dropdown -->
+                            <div class="notification-dropdown" id="notificationDropdown">
+                                <div class="notification-header">
+                                    <h4>Notifications</h4>
+                                    <button onclick="App.clearAllNotifications()">Clear All</button>
+                                </div>
+                                <div class="notification-list" id="notificationList">
+                                    <div class="empty-notifications">
+                                        <i class="fas fa-bell-slash"></i>
+                                        <p>No notifications</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    
+                        <!-- User Profile -->
+                        <div class="user-profile" id="userProfileBtn" onclick="App.toggleUserMenu()">
+                            <div class="user-avatar" id="userAvatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <span class="user-name" id="userName">User</span>
+                            <i class="fas fa-chevron-down"></i>
+                    
+                            <!-- User Dropdown Menu -->
+                            <div class="user-dropdown" id="userDropdown">
+                                <div class="user-info">
+                                    <div class="user-avatar-large" id="userAvatarLarge">
+                                        <i class="fas fa-user"></i>
+                                    </div>
+                                    <div class="user-details">
+                                        <strong id="userFullName">User</strong>
+                                        <span id="userEmail">user@example.com</span>
+                                    </div>
+                                </div>
+                                <div class="dropdown-divider"></div>
+                                <a href="#" onclick="App.navigateTo('settings'); App.toggleUserMenu();">
+                                    <i class="fas fa-cog"></i> Settings
+                                </a>
+                                <a href="#" onclick="logout()">
+                                    <i class="fas fa-sign-out-alt"></i> Logout
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </header>
@@ -1402,7 +1451,6 @@
         // Authentication check and app initialization
         auth.onAuthStateChanged(async (user) => {
             if (!user) {
-                // Not logged in - redirect to login
                 window.location.href = 'index.html';
                 return;
             }
@@ -1410,28 +1458,50 @@
             // Initialize storage with user ID
             await Storage.init(user.uid);
 
-            // Update user name in UI
-            const userNameElements = document.querySelectorAll('#userName, .user-name');
-            userNameElements.forEach(el => {
-                if (el) el.textContent = user.displayName || 'User';
+            // Update user profile in UI
+            const name = user.displayName || 'User';
+            const email = user.email || '';
+            const photoURL = user.photoURL;
+
+            // Update username
+            document.querySelectorAll('#userName, #userFullName').forEach(el => {
+                if (el) el.textContent = name;
             });
 
-            // Update user email
-            const userEmailElements = document.querySelectorAll('#userEmail, .user-email');
-            userEmailElements.forEach(el => {
-                if (el) el.textContent = user.email || '';
+            // Update email
+            document.querySelectorAll('#userEmail').forEach(el => {
+                if (el) el.textContent = email;
+            });
+
+            // Update avatar
+            document.querySelectorAll('#userAvatar, #userAvatarLarge').forEach(el => {
+                if (el) {
+                    if (photoURL) {
+                        el.innerHTML = `<img src="${photoURL}" alt="${name}" style="width:100%;height:100%;object-fit:cover;border-radius:inherit;">`;
+                    } else {
+                        const initial = name.charAt(0).toUpperCase();
+                        el.innerHTML = `<span style="font-weight:600;font-size:inherit">${initial}</span>`;
+                    }
+                }
             });
 
             // Initialize app
             if (typeof App !== 'undefined' && App.init) {
                 await App.init();
             }
+
+            // Load initial notifications
+            if (typeof App !== 'undefined' && App.loadNotifications) {
+                await App.loadNotifications();
+            }
         });
 
         // Logout function
         function logout() {
             if (confirm('Are you sure you want to logout?')) {
-                Storage.cleanup(); // Clear listeners
+                if (typeof Storage !== 'undefined' && Storage.cleanup) {
+                    Storage.cleanup();
+                }
                 auth.signOut().then(() => {
                     window.location.href = 'index.html';
                 }).catch(error => {

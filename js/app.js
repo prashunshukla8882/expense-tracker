@@ -33,6 +33,7 @@ const App = {
         this.initNotifications();
         this.initExport();
         this.initFilters();
+        this.initDropdownClose();
 
         // Initialize new modules
         this.initBorrowModule();
@@ -1809,7 +1810,188 @@ const App = {
       badge.textContent = unreadCount;
       badge.style.display = unreadCount > 0 ? "flex" : "none";
     }
-  },
+    },
+  
+  // ==================== NOTIFICATION FUNCTIONS ====================
+toggleNotifications() {
+    const dropdown = document.getElementById('notificationDropdown');
+    const userDropdown = document.getElementById('userDropdown');
+    
+    // Close user dropdown if open
+    if (userDropdown) {
+        userDropdown.classList.remove('show');
+    }
+    
+    // Toggle notification dropdown
+    if (dropdown) {
+        dropdown.classList.toggle('show');
+        
+        if (dropdown.classList.contains('show')) {
+            this.loadNotifications();
+        }
+    }
+},
+
+async loadNotifications() {
+    const list = document.getElementById('notificationList');
+    const badge = document.getElementById('notificationBadge');
+    
+    if (!list) return;
+    
+    try {
+        const notifications = await Storage.getNotifications();
+        const unreadCount = notifications.filter(n => !n.read).length;
+        
+        // Update badge
+        if (badge) {
+            badge.textContent = unreadCount;
+            badge.style.display = unreadCount > 0 ? 'flex' : 'none';
+        }
+        
+        if (notifications.length === 0) {
+            list.innerHTML = `
+                <div class="empty-notifications">
+                    <i class="fas fa-bell-slash"></i>
+                    <p>No notifications</p>
+                </div>
+            `;
+            return;
+        }
+        
+        list.innerHTML = notifications.map(n => `
+            <div class="notification-item ${n.read ? '' : 'unread'}" onclick="App.markNotificationRead('${n.id}')">
+                <div class="notification-icon ${n.type || 'info'}">
+                    <i class="fas ${this.getNotificationIcon(n.type)}"></i>
+                </div>
+                <div class="notification-content">
+                    <h5>${n.title || 'Notification'}</h5>
+                    <p>${n.message || ''}</p>
+                    <span class="time">${Utils.getRelativeTime(n.createdAt)}</span>
+                </div>
+            </div>
+        `).join('');
+        
+    } catch (error) {
+        console.error('Error loading notifications:', error);
+        list.innerHTML = `
+            <div class="empty-notifications">
+                <i class="fas fa-exclamation-circle"></i>
+                <p>Error loading notifications</p>
+            </div>
+        `;
+    }
+},
+
+getNotificationIcon(type) {
+    const icons = {
+        success: 'fa-check-circle',
+        warning: 'fa-exclamation-triangle',
+        danger: 'fa-times-circle',
+        info: 'fa-info-circle'
+    };
+    return icons[type] || 'fa-bell';
+},
+
+async markNotificationRead(id) {
+    try {
+        await Storage.markNotificationRead(id);
+        await this.loadNotifications();
+    } catch (error) {
+        console.error('Error marking notification read:', error);
+    }
+},
+
+async clearAllNotifications() {
+    if (confirm('Clear all notifications?')) {
+        try {
+            await Storage.clearNotifications();
+            await this.loadNotifications();
+            Utils.showToast('Notifications cleared', 'success');
+        } catch (error) {
+            console.error('Error clearing notifications:', error);
+            Utils.showToast('Error clearing notifications', 'error');
+        }
+    }
+},
+
+// ==================== USER MENU FUNCTIONS ====================
+toggleUserMenu() {
+    const dropdown = document.getElementById('userDropdown');
+    const profileBtn = document.getElementById('userProfileBtn');
+    const notificationDropdown = document.getElementById('notificationDropdown');
+    
+    // Close notification dropdown if open
+    if (notificationDropdown) {
+        notificationDropdown.classList.remove('show');
+    }
+    
+    // Toggle user dropdown
+    if (dropdown) {
+        dropdown.classList.toggle('show');
+    }
+    
+    if (profileBtn) {
+        profileBtn.classList.toggle('active');
+    }
+},
+
+updateUserProfile(user) {
+    if (!user) return;
+    
+    const name = user.displayName || 'User';
+    const email = user.email || '';
+    const photoURL = user.photoURL;
+    
+    // Update all user name elements
+    const nameElements = document.querySelectorAll('#userName, #userFullName, .user-name');
+    nameElements.forEach(el => {
+        if (el) el.textContent = name;
+    });
+    
+    // Update all email elements
+    const emailElements = document.querySelectorAll('#userEmail, .user-email');
+    emailElements.forEach(el => {
+        if (el) el.textContent = email;
+    });
+    
+    // Update avatar with photo or initial
+    const avatarElements = document.querySelectorAll('#userAvatar, #userAvatarLarge, .user-avatar');
+    avatarElements.forEach(el => {
+        if (el) {
+            if (photoURL) {
+                el.innerHTML = `<img src="${photoURL}" alt="${name}">`;
+            } else {
+                const initial = name.charAt(0).toUpperCase();
+                el.innerHTML = `<span style="font-weight:600">${initial}</span>`;
+            }
+        }
+    });
+},
+
+// Close dropdowns when clicking outside
+initDropdownClose() {
+    document.addEventListener('click', (e) => {
+        const notificationWrapper = document.getElementById('notificationWrapper');
+        const userProfileBtn = document.getElementById('userProfileBtn');
+        const notificationDropdown = document.getElementById('notificationDropdown');
+        const userDropdown = document.getElementById('userDropdown');
+        
+        // Close notification dropdown
+        if (notificationWrapper && !notificationWrapper.contains(e.target)) {
+            if (notificationDropdown) {
+                notificationDropdown.classList.remove('show');
+            }
+        }
+        
+        // Close user dropdown
+        if (userProfileBtn && !userProfileBtn.contains(e.target)) {
+            if (userDropdown) {
+                userDropdown.classList.remove('show');
+            }
+            userProfileBtn.classList.remove('active');
+        }
+    });
+},
 
   // ==================== EXPORT ====================
   initExport() {
