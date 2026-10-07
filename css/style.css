@@ -4359,3 +4359,168 @@ body {
 [data-theme="dark"] .logo-credit {
     color: #64748b;
 }
+
+/* ==================== ABOUT SECTION - FIXED ==================== */
+.about-section .about-content {
+    text-align: center;
+    padding: 20px 0;
+}
+
+.about-section .about-logo {
+    width: 80px;
+    height: 80px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 15px;
+    box-shadow: 0 10px 30px rgba(102, 126, 234, 0.3);
+}
+
+.about-section .about-logo i {
+    font-size: 2.5rem;
+    color: white;
+}
+
+.about-section h4 {
+    font-size: 1.5rem;
+    color: #1f2937;
+    margin: 0 0 5px 0;
+}
+
+.about-section .version {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0 0 15px 0;
+}
+
+.about-section .description {
+    color: #6b7280;
+    font-size: 0.95rem;
+    max-width: 300px;
+    margin: 0 auto 20px;
+    line-height: 1.5;
+}
+
+/* Developer Info Box */
+.developer-info {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+    border-radius: 16px;
+    padding: 20px;
+    margin: 20px auto;
+    max-width: 280px;
+}
+
+.developer-info p {
+    color: #6b7280;
+    font-size: 0.9rem;
+    margin: 0;
+}
+
+.developer-info .heart {
+    color: #ef4444;
+}
+
+.developer-info h5 {
+    color: #667eea;
+    font-size: 1.4rem;
+    font-weight: 700;
+    margin: 8px 0;
+}
+
+.developer-info .developer-tagline {
+    font-style: italic;
+    color: #9ca3af;
+    font-size: 0.85rem;
+}
+
+/* Social Links - FIXED */
+.social-links {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 15px;
+    margin-top: 25px;
+    padding: 0 20px;
+}
+
+.social-link {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: all 0.3s ease;
+    color: white;
+}
+
+.social-link svg {
+    width: 20px;
+    height: 20px;
+    fill: currentColor;
+}
+
+/* Social Link Colors */
+.social-link.github {
+    background: #24292e;
+}
+
+.social-link.linkedin {
+    background: #0077b5;
+}
+
+.social-link.twitter {
+    background: #000000;
+}
+
+.social-link.email {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+/* Hover Effects */
+.social-link:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+}
+
+.social-link.github:hover {
+    background: #333;
+}
+
+.social-link.linkedin:hover {
+    background: #005885;
+}
+
+.social-link.twitter:hover {
+    background: #333;
+}
+
+.social-link.email:hover {
+    box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Dark Mode */
+[data-theme="dark"] .about-section h4 {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .about-section .version,
+[data-theme="dark"] .about-section .description,
+[data-theme="dark"] .developer-info p {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .developer-info {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.2) 0%, rgba(118, 75, 162, 0.2) 100%);
+}
+
+[data-theme="dark"] .social-link.github {
+    background: #444;
+}
+
+[data-theme="dark"] .social-link.twitter {
+    background: #333;
+}
