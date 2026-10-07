@@ -10,6 +10,45 @@
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- ⬇️ ADD ALL THESE META TAGS HERE ⬇️ -->
+    
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="ExpenseFlow">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="ExpenseFlow">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#667eea">
+    
+    <!-- Author Meta -->
+    <meta name="author" content="Ishu">
+    <meta name="creator" content="Ishu">
+    
+    <!-- Description -->
+    <meta name="description" content="ExpenseFlow - A beautiful expense tracker app. Developed by Ishu.">
+    <meta name="keywords" content="expense tracker, finance, budget, money management, Ishu">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:title" content="ExpenseFlow - Smart Expense Tracker">
+    <meta property="og:description" content="Manage your finances smartly. Developed by Ishu.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ishu-codes.github.io/expense-tracker/">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23667eea' rx='20' width='100' height='100'/><text x='50%25' y='58%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='60' font-family='Arial' font-weight='bold'>E</text></svg>">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/180/wallet.png">
+    
+    <!-- ⬆️ END OF META TAGS ⬆️ -->
+    
+    <!-- Fonts & Icons (keep these) -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -455,6 +494,26 @@
             font-size: 1.2rem;
             font-weight: 500;
         }
+
+        .logo {
+    /* existing styles... */
+    cursor: pointer;
+    transition: transform 0.3s;
+    text-decoration: none;
+}
+
+.logo:hover {
+    transform: scale(1.05);
+}
+
+.tagline {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.85rem;
+    margin-top: -5px;
+    margin-bottom: 20px;
+    font-style: italic;
+}
     </style>
 </head>
 
@@ -468,10 +527,11 @@
     </div>
 
     <div class="auth-container" id="authContainer" style="display: none;">
-        <div class="logo">
+        <a href="index.html" class="logo" title="ExpenseFlow Home">
             <i class="fas fa-wallet"></i>
-        </div>
+        </a>
         <h1>ExpenseFlow</h1>
+        <p class="tagline">by Ishu</p>
         <p class="subtitle">Manage your finances smartly</p>
 
         <!-- Tabs -->
@@ -891,6 +951,32 @@
             }
         });
     </script>
+
+    <footer class="login-footer">
+        <p>Made with ❤️ by <a href="https://github.com/ishu-codes" target="_blank">Ishu</a></p>
+    </footer>
+    
+    <style>
+        .login-footer {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.85rem;
+        }
+    
+        .login-footer a {
+            color: white;
+            font-weight: 600;
+            text-decoration: none;
+        }
+    
+        .login-footer a:hover {
+            text-decoration: underline;
+        }
+    </style>
 </body>
 
 </html>

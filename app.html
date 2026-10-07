@@ -6,6 +6,45 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ExpenseFlow - Smart Expense Tracker</title>
+    <!-- ⬇️ ADD ALL THESE META TAGS HERE ⬇️ -->
+    
+    <!-- PWA Meta Tags -->
+    <meta name="application-name" content="ExpenseFlow">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="ExpenseFlow">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#667eea">
+    
+    <!-- Author Meta -->
+    <meta name="author" content="Ishu">
+    <meta name="creator" content="Ishu">
+    
+    <!-- Description -->
+    <meta name="description" content="ExpenseFlow - A beautiful expense tracker app. Developed by Ishu.">
+    <meta name="keywords" content="expense tracker, finance, budget, money management, Ishu">
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:title" content="ExpenseFlow - Smart Expense Tracker">
+    <meta property="og:description" content="Manage your finances smartly. Developed by Ishu.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://ishu-codes.github.io/expense-tracker/">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="manifest.json">
+    
+    <!-- Favicon -->
+    <link rel="icon"
+        href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect fill='%23667eea' rx='20' width='100' height='100'/><text x='50%25' y='58%25' dominant-baseline='middle' text-anchor='middle' fill='white' font-size='60' font-family='Arial' font-weight='bold'>E</text></svg>">
+    
+    <!-- Apple Touch Icon -->
+    <link rel="apple-touch-icon" href="https://img.icons8.com/fluency/180/wallet.png">
+    
+    <!-- ⬆️ END OF META TAGS ⬆️ -->
+    
+    <!-- Fonts & Icons (keep these) -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#667eea">
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap"
@@ -47,6 +86,7 @@
             <div class="loading-bar">
                 <div class="loading-progress"></div>
             </div>
+            <p class="splash-credit">Developed by Ishu</p> <!-- ADD THIS -->
         </div>
     </div>
 
@@ -54,11 +94,13 @@
     <div id="app" class="app hidden">
         <!-- Sidebar -->
         <nav class="sidebar" id="sidebar">
+            <!-- UPDATED - Clickable Logo -->
             <div class="sidebar-header">
-                <div class="logo">
+                <a href="#" class="logo" onclick="return navigateHome()" title="Go to Dashboard">
                     <i class="fas fa-wallet"></i>
                     <span>ExpenseFlow</span>
-                </div>
+                </a>
+                <p class="logo-credit">by Ishu</p>
             </div>
             <ul class="nav-menu">
                 <li class="nav-item active" data-page="dashboard">
@@ -669,7 +711,7 @@
                     </div>
 
                 <!-- About Section with SVG Icons -->
-                <div class="settings-card about-section">
+                <div class="settings-card about-section animate-card">
                     <h3><i class="fas fa-info-circle"></i> About</h3>
                     <div class="about-content">
                         <div class="about-logo">
@@ -678,36 +720,29 @@
                         <h4>ExpenseFlow</h4>
                         <p class="version">Version 1.0.0</p>
                         <p class="description">
-                            A beautiful expense tracker for managing your finances.
+                            A beautiful expense tracker for managing your finances smartly.
                         </p>
+                
+                        <!-- Developer Info -->
+                        <div class="developer-info">
+                            <p>Developed with ❤️ by</p>
+                            <h5>Ishu</h5>
+                            <p class="developer-tagline">Full Stack Developer</p>
+                        </div>
+                
                         <div class="social-links">
-                            <!-- GitHub -->
-                            <a href="#" class="social-link github" title="GitHub">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-                                    <path
-                                        d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z" />
-                                </svg>
+                            <a href="https://github.com/ishu-codes" class="social-link github" title="GitHub" target="_blank">
+                                <i class="fab fa-github"></i>
                             </a>
-                            <!-- Twitter/X -->
-                            <a href="#" class="social-link twitter" title="Twitter">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                                    <path
-                                        d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-                                </svg>
+                            <a href="https://linkedin.com/in/your-profile" class="social-link linkedin" title="LinkedIn"
+                                target="_blank">
+                                <i class="fab fa-linkedin"></i>
                             </a>
-                            <!-- LinkedIn -->
-                            <a href="#" class="social-link linkedin" title="LinkedIn">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                                    <path
-                                        d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
-                                </svg>
+                            <a href="https://twitter.com/your-handle" class="social-link twitter" title="Twitter" target="_blank">
+                                <i class="fab fa-twitter"></i>
                             </a>
-                            <!-- Facebook -->
-                            <a href="#" class="social-link facebook" title="Facebook">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
-                                    <path
-                                        d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z" />
-                                </svg>
+                            <a href="mailto:your-email@gmail.com" class="social-link email" title="Email">
+                                <i class="fas fa-envelope"></i>
                             </a>
                         </div>
                     </div>
@@ -970,6 +1005,11 @@
                     </div>
                 </div>
             </section>
+            <!-- App Footer Credit -->
+            <footer class="app-footer">
+                <p>Made with ❤️ by <a href="https://github.com/ishu-codes" target="_blank">Ishu</a></p>
+                <p class="version">ExpenseFlow v1.0.0</p>
+            </footer>
         </main>
     </div>
 
@@ -1564,6 +1604,22 @@
                 });
             }
         }
+
+        function navigateHome() {
+                // Navigate to dashboard
+                App.navigateTo('dashboard');
+
+                // Update active nav item
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                const dashboardNav = document.querySelector('.nav-item[data-page="dashboard"]');
+                if (dashboardNav) {
+                    dashboardNav.classList.add('active');
+                }
+
+                return false; // Prevent default link behavior
+            }
     </script>
 
 </body>

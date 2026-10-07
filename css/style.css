@@ -4206,3 +4206,156 @@ body {
         gap: 10px;
     }
 }
+
+.logo-credit {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    text-align: center;
+    margin-top: -5px;
+    font-style: italic;
+}
+
+[data-theme="dark"] .logo-credit {
+    color: #64748b;
+}
+
+/* ==================== APP FOOTER ==================== */
+.app-footer {
+    text-align: center;
+    padding: 20px;
+    margin-top: 40px;
+    border-top: 1px solid #e5e7eb;
+    color: #64748b;
+    font-size: 0.85rem;
+}
+
+.app-footer a {
+    color: #667eea;
+    text-decoration: none;
+    font-weight: 600;
+}
+
+.app-footer a:hover {
+    text-decoration: underline;
+}
+
+.app-footer .version {
+    font-size: 0.75rem;
+    margin-top: 5px;
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .app-footer {
+    border-top-color: #334155;
+    color: #94a3b8;
+}
+
+.splash-tagline {
+    color: rgba(255, 255, 255, 0.8);
+    font-size: 1rem;
+    margin-top: -10px;
+    margin-bottom: 20px;
+}
+
+.splash-credit {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 0.8rem;
+    margin-top: 20px;
+    font-style: italic;
+}
+
+/* Developer Info in About Section */
+.developer-info {
+    margin: 20px 0;
+    padding: 15px;
+    background: linear-gradient(135deg, #667eea20 0%, #764ba220 100%);
+    border-radius: 12px;
+    text-align: center;
+}
+
+.developer-info p {
+    color: #64748b;
+    font-size: 0.85rem;
+    margin: 0;
+}
+
+.developer-info h5 {
+    color: #667eea;
+    font-size: 1.2rem;
+    margin: 5px 0;
+    font-weight: 700;
+}
+
+.developer-tagline {
+    font-style: italic;
+}
+
+.social-links {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.social-link {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-size: 1.1rem;
+    transition: transform 0.3s, box-shadow 0.3s;
+}
+
+.social-link:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+.social-link.github {
+    background: #333;
+}
+
+.social-link.linkedin {
+    background: #0077b5;
+}
+
+.social-link.twitter {
+    background: #1da1f2;
+}
+
+.social-link.email {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+/* ==================== CLICKABLE LOGO ==================== */
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.3s, opacity 0.3s;
+}
+
+.logo:hover {
+    transform: scale(1.02);
+    opacity: 0.9;
+}
+
+.logo:active {
+    transform: scale(0.98);
+}
+
+.logo-credit {
+    font-size: 0.7rem;
+    color: #94a3b8;
+    text-align: center;
+    margin-top: 5px;
+    font-style: italic;
+}
+
+[data-theme="dark"] .logo-credit {
+    color: #64748b;
+}
