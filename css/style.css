@@ -4524,3 +4524,1876 @@ body {
 [data-theme="dark"] .social-link.twitter {
     background: #333;
 }
+
+/* ==================== INDIAN CALENDAR STYLES ==================== */
+
+/* Calendar Controls */
+.calendar-controls {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+/* Mode Toggle */
+.calendar-mode-toggle {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f1f5f9;
+    padding: 8px 16px;
+    border-radius: 30px;
+}
+
+.mode-label {
+    font-size: 0.85rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+.toggle-switch {
+    position: relative;
+    width: 50px;
+    height: 26px;
+}
+
+.toggle-switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.toggle-slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: #cbd5e1;
+    border-radius: 26px;
+    transition: 0.3s;
+}
+
+.toggle-slider:before {
+    content: "";
+    position: absolute;
+    height: 20px;
+    width: 20px;
+    left: 3px;
+    bottom: 3px;
+    background: white;
+    border-radius: 50%;
+    transition: 0.3s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+    background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+    transform: translateX(24px);
+}
+
+/* ==================== CALENDAR - COMPACT INDIAN STYLE ==================== */
+
+/* Calendar Container */
+.calendar-container {
+    background: white;
+    border-radius: 16px;
+    padding: 15px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* Calendar Header (Days of Week) */
+.calendar-header {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 5px;
+    margin-bottom: 10px;
+}
+
+.calendar-header span {
+    text-align: center;
+    font-weight: 600;
+    font-size: 0.8rem;
+    color: #64748b;
+    padding: 8px 0;
+}
+
+/* Sunday = Red */
+.calendar-header span:first-child {
+    color: #ef4444;
+}
+
+/* Saturday = Blue */
+.calendar-header span:last-child {
+    color: #3b82f6;
+}
+
+/* Calendar Grid */
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+/* Calendar Day Cell - Compact */
+.calendar-day {
+    aspect-ratio: 1;
+    min-height: 70px;
+    max-height: 90px;
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 4px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    overflow: hidden;
+    border: 1px solid transparent;
+}
+
+.calendar-day:hover {
+    background: #f1f5f9;
+    transform: scale(1.02);
+    z-index: 1;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.calendar-day.other-month {
+    opacity: 0.4;
+    background: transparent;
+}
+
+.calendar-day.today {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.calendar-day.today .date-number {
+    color: white;
+}
+
+.calendar-day.today .tithi-text,
+.calendar-day.today .nakshatra-text {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.calendar-day.selected {
+    border: 2px solid #667eea;
+    background: #eef2ff;
+}
+
+.calendar-day.holiday {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border-left: 3px solid #ef4444;
+}
+
+.calendar-day.festival {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border-left: 3px solid #f59e0b;
+}
+
+/* Date Number Row */
+.date-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 2px;
+}
+
+.date-number {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1;
+}
+
+/* Sunday dates in red */
+.calendar-day.sunday .date-number {
+    color: #ef4444;
+}
+
+/* Hindi/Tithi Date */
+.hindi-date {
+    font-size: 0.55rem;
+    color: #f97316;
+    font-weight: 600;
+    background: #fff7ed;
+    padding: 1px 4px;
+    border-radius: 4px;
+}
+
+.calendar-day.today .hindi-date {
+    background: rgba(255, 255, 255, 0.2);
+    color: white;
+}
+
+/* Tithi & Nakshatra Info */
+.panchang-mini {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 1px;
+    min-height: 0;
+}
+
+.tithi-text {
+    font-size: 0.55rem;
+    color: #7c3aed;
+    font-weight: 500;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nakshatra-text {
+    font-size: 0.5rem;
+    color: #6b7280;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Festival/Event Indicators */
+.event-indicators {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+    margin-top: auto;
+    flex-wrap: wrap;
+}
+
+.event-emoji {
+    font-size: 0.7rem;
+    line-height: 1;
+}
+
+.event-dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.event-dot.national {
+    background: #ef4444;
+}
+
+.event-dot.hindu {
+    background: #f97316;
+}
+
+.event-dot.islamic {
+    background: #22c55e;
+}
+
+.event-dot.christian {
+    background: #3b82f6;
+}
+
+.event-dot.sikh {
+    background: #8b5cf6;
+}
+
+.event-dot.bank {
+    background: #06b6d4;
+}
+
+/* Transaction indicator */
+.transaction-indicator {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    border: 1px solid white;
+}
+
+/* Moon Phase Mini Icon */
+.moon-mini {
+    font-size: 0.6rem;
+    position: absolute;
+    bottom: 3px;
+    right: 3px;
+    opacity: 0.7;
+}
+
+/* Festival Name Tooltip on Hover */
+.calendar-day .festival-tooltip {
+    display: none;
+    position: absolute;
+    bottom: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 8px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.calendar-day:hover .festival-tooltip {
+    display: block;
+}
+
+.festival-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #1e293b;
+}
+
+/* ==================== SIMPLE MODE (Less Info) ==================== */
+.calendar-day.simple-mode {
+    min-height: 50px;
+    max-height: 60px;
+    justify-content: center;
+    align-items: center;
+}
+
+.calendar-day.simple-mode .date-row {
+    justify-content: center;
+}
+
+.calendar-day.simple-mode .hindi-date,
+.calendar-day.simple-mode .panchang-mini,
+.calendar-day.simple-mode .moon-mini {
+    display: none;
+}
+
+/* ==================== INDIAN CALENDAR BAR - COMPACT ==================== */
+.indian-calendar-bar {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 1px solid #f59e0b;
+    border-radius: 12px;
+    padding: 12px 20px;
+    margin-bottom: 15px;
+}
+
+.panchang-quick-view {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.panchang-item {
+    text-align: center;
+    flex: 1;
+    min-width: 100px;
+}
+
+.panchang-label {
+    display: block;
+    font-size: 0.65rem;
+    color: #92400e;
+    margin-bottom: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.panchang-value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #78350f;
+}
+
+/* ==================== HOLIDAY FILTERS - COMPACT ==================== */
+.holiday-filters {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 15px;
+    overflow-x: auto;
+    margin-bottom: 15px;
+    background: white;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.filter-label {
+    font-weight: 600;
+    color: #374151;
+    font-size: 0.8rem;
+    white-space: nowrap;
+}
+
+.holiday-filters .filter-chip {
+    padding: 5px 12px;
+    border-radius: 20px;
+    border: 1px solid #e5e7eb;
+    background: white;
+    color: #64748b;
+    font-size: 0.75rem;
+    cursor: pointer;
+    white-space: nowrap;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.holiday-filters .filter-chip:hover {
+    border-color: #667eea;
+    color: #667eea;
+}
+
+.holiday-filters .filter-chip.active {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-color: transparent;
+}
+
+/* ==================== CALENDAR LEGEND - INLINE ==================== */
+.calendar-legend {
+    padding: 10px 15px;
+    margin-top: 15px;
+    background: #f8fafc;
+    border-radius: 10px;
+}
+
+.calendar-legend h4 {
+    display: none;
+}
+
+.legend-items {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    gap: 15px;
+}
+
+.legend-item {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+.legend-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+}
+
+/* ==================== DAY DETAILS PANEL - FIXED ==================== */
+.day-details-panel {
+    position: fixed;
+    top: 0;
+    right: -400px;
+    /* Hidden by default */
+    width: 380px;
+    height: 100vh;
+    background: white;
+    box-shadow: -5px 0 30px rgba(0, 0, 0, 0.15);
+    padding: 20px;
+    overflow-y: auto;
+    z-index: 1001;
+    transition: right 0.3s ease;
+}
+
+.day-details-panel.open {
+    right: 0;
+    /* Slide in when open */
+}
+
+/* Overlay behind panel */
+.day-details-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.day-details-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Panel Header */
+.day-details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 15px;
+    border-bottom: 1px solid #e5e7eb;
+    margin-bottom: 20px;
+}
+
+.day-details-header h3 {
+    font-size: 1rem;
+    color: #1f2937;
+    margin: 0;
+    font-weight: 600;
+}
+
+.day-details-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: #f1f5f9;
+    border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    color: #64748b;
+    font-size: 1rem;
+}
+
+.day-details-close:hover {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+/* Empty message */
+.empty-message {
+    text-align: center;
+    color: #94a3b8;
+    font-size: 0.9rem;
+    padding: 20px;
+}
+
+/* Dark Mode */
+[data-theme="dark"] .day-details-panel {
+    background: #1e293b;
+}
+
+[data-theme="dark"] .day-details-header {
+    border-bottom-color: #334155;
+}
+
+[data-theme="dark"] .day-details-header h3 {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .day-details-close {
+    background: #334155;
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .day-details-close:hover {
+    background: #7f1d1d;
+    color: #fca5a5;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .day-details-panel {
+        width: 100%;
+        right: -100%;
+    }
+}
+
+/* ==================== PANCHANG DETAILS IN PANEL ==================== */
+.panchang-section {
+    margin-bottom: 20px;
+}
+
+.panchang-section h4 {
+    font-size: 0.85rem;
+    color: #374151;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.panchang-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+}
+
+.panchang-card {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.panchang-icon {
+    font-size: 1.2rem;
+}
+
+.panchang-info .label {
+    font-size: 0.65rem;
+    color: #64748b;
+    display: block;
+}
+
+.panchang-info .value {
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* Sun Moon Grid */
+.sun-moon-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+}
+
+.sun-moon-card {
+    text-align: center;
+    padding: 10px 5px;
+    border-radius: 10px;
+}
+
+.sun-moon-card .icon {
+    font-size: 1.3rem;
+    display: block;
+    margin-bottom: 4px;
+}
+
+.sun-moon-card .label {
+    font-size: 0.6rem;
+    color: #64748b;
+}
+
+.sun-moon-card .value {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.sun-moon-card.sunrise {
+    background: #fef9c3;
+}
+
+.sun-moon-card.sunset {
+    background: #fed7aa;
+}
+
+.sun-moon-card.moon {
+    background: #e0e7ff;
+}
+
+.sun-moon-card.paksha {
+    background: #f3e8ff;
+}
+
+/* Rahu Kaal Compact */
+.rahu-kaal-card {
+    background: #fee2e2;
+    border-radius: 10px;
+    padding: 10px 15px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.rahu-icon {
+    font-size: 1.2rem;
+}
+
+.rahu-label {
+    font-size: 0.7rem;
+    color: #991b1b;
+}
+
+.rahu-time {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #dc2626;
+}
+
+/* Festival Cards */
+.festival-card {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.festival-card .emoji {
+    font-size: 1.5rem;
+}
+
+.festival-card .name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    color: #78350f;
+}
+
+.festival-card .type-badge {
+    margin-left: auto;
+    padding: 3px 8px;
+    border-radius: 10px;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.type-badge.national {
+    background: #fecaca;
+    color: #dc2626;
+}
+
+.type-badge.hindu {
+    background: #fed7aa;
+    color: #ea580c;
+}
+
+.type-badge.islamic {
+    background: #bbf7d0;
+    color: #16a34a;
+}
+
+.type-badge.christian {
+    background: #bfdbfe;
+    color: #2563eb;
+}
+
+.type-badge.sikh {
+    background: #e9d5ff;
+    color: #7c3aed;
+}
+
+/* ==================== DARK MODE ==================== */
+[data-theme="dark"] .calendar-container {
+    background: #1e293b;
+}
+
+[data-theme="dark"] .calendar-day {
+    background: #334155;
+}
+
+[data-theme="dark"] .calendar-day:hover {
+    background: #475569;
+}
+
+[data-theme="dark"] .calendar-day.selected {
+    background: #3b4f6b;
+    border-color: #667eea;
+}
+
+[data-theme="dark"] .date-number {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .tithi-text {
+    color: #a78bfa;
+}
+
+[data-theme="dark"] .nakshatra-text {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .hindi-date {
+    background: #44403c;
+    color: #fb923c;
+}
+
+[data-theme="dark"] .indian-calendar-bar {
+    background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
+    border-color: #b45309;
+}
+
+[data-theme="dark"] .panchang-label {
+    color: #fde68a;
+}
+
+[data-theme="dark"] .panchang-value {
+    color: white;
+}
+
+[data-theme="dark"] .holiday-filters {
+    background: #1e293b;
+}
+
+[data-theme="dark"] .holiday-filters .filter-chip {
+    background: #334155;
+    border-color: #475569;
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .day-details-panel {
+    background: #1e293b;
+}
+
+[data-theme="dark"] .panchang-card {
+    background: #334155;
+}
+
+[data-theme="dark"] .panchang-info .value {
+    color: #f1f5f9;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+    .calendar-day {
+        min-height: 55px;
+        max-height: 70px;
+        padding: 3px;
+    }
+
+    .date-number {
+        font-size: 0.85rem;
+    }
+
+    .tithi-text,
+    .nakshatra-text {
+        font-size: 0.5rem;
+    }
+
+    .hindi-date {
+        font-size: 0.5rem;
+        padding: 1px 2px;
+    }
+
+    .panchang-quick-view {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+    }
+
+    .day-details-panel {
+        width: 100%;
+        right: -100%;
+    }
+
+    .sun-moon-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-day {
+        min-height: 45px;
+        max-height: 55px;
+    }
+
+    .calendar-day .panchang-mini {
+        display: none;
+    }
+
+    .calendar-day .hindi-date {
+        display: none;
+    }
+
+    .date-number {
+        font-size: 0.9rem;
+    }
+}
+
+/* ==================== CALENDAR CELLS WITH DATA ==================== */
+
+.calendar-grid {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+}
+
+/* Calendar Day Cell */
+.calendar-day {
+    min-height: 75px;
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 5px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    border: 1px solid #e5e7eb;
+    overflow: hidden;
+}
+
+.calendar-day:hover {
+    background: #f1f5f9;
+    border-color: #667eea;
+    transform: scale(1.02);
+    z-index: 2;
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+}
+
+.calendar-day.other-month {
+    opacity: 0.4;
+    background: transparent;
+    border-color: transparent;
+}
+
+.calendar-day.other-month:hover {
+    opacity: 0.6;
+}
+
+/* Today */
+.calendar-day.today {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-color: #667eea;
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.calendar-day.today .date-number,
+.calendar-day.today .tithi-text,
+.calendar-day.today .nakshatra-text,
+.calendar-day.today .hindi-date {
+    color: white !important;
+}
+
+.calendar-day.today .hindi-date {
+    background: rgba(255, 255, 255, 0.2) !important;
+}
+
+/* Selected */
+.calendar-day.selected {
+    border: 2px solid #667eea;
+    background: #eef2ff;
+}
+
+/* Sunday */
+.calendar-day.sunday .date-number {
+    color: #ef4444;
+}
+
+/* Saturday */
+.calendar-day.saturday .date-number {
+    color: #3b82f6;
+}
+
+/* Holiday */
+.calendar-day.holiday {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border-left: 3px solid #ef4444;
+}
+
+/* Festival */
+.calendar-day.festival {
+    background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
+    border-left: 3px solid #f59e0b;
+}
+
+/* Date Row */
+.date-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 3px;
+}
+
+.date-number {
+    font-size: 1rem;
+    font-weight: 700;
+    color: #1f2937;
+    line-height: 1;
+}
+
+/* Hindi/Tithi Number Badge */
+.hindi-date {
+    font-size: 0.6rem;
+    color: #ea580c;
+    font-weight: 600;
+    background: #fff7ed;
+    padding: 2px 5px;
+    border-radius: 4px;
+    line-height: 1;
+}
+
+/* Panchang Mini Info */
+.panchang-mini {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-height: 0;
+    justify-content: center;
+}
+
+.tithi-text {
+    font-size: 0.65rem;
+    color: #7c3aed;
+    font-weight: 600;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.nakshatra-text {
+    font-size: 0.55rem;
+    color: #64748b;
+    line-height: 1.2;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Event Indicators */
+.event-indicators {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+    margin-top: auto;
+    flex-wrap: wrap;
+}
+
+.event-emoji {
+    font-size: 0.75rem;
+    line-height: 1;
+}
+
+.event-overflow {
+    font-size: 0.55rem;
+    color: #64748b;
+    font-weight: 500;
+}
+
+/* Transaction Dot */
+.transaction-dot {
+    position: absolute;
+    top: 5px;
+    right: 5px;
+    width: 8px;
+    height: 8px;
+    background: #10b981;
+    border-radius: 50%;
+    border: 1.5px solid white;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+/* Moon Mini Icon */
+.moon-mini {
+    position: absolute;
+    bottom: 3px;
+    right: 5px;
+    font-size: 0.7rem;
+    opacity: 0.8;
+}
+
+/* Festival Tooltip */
+.festival-tooltip {
+    display: none;
+    position: absolute;
+    bottom: calc(100% + 5px);
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1e293b;
+    color: white;
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    white-space: nowrap;
+    z-index: 100;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    max-width: 200px;
+    text-align: center;
+}
+
+.calendar-day:hover .festival-tooltip {
+    display: block;
+}
+
+.festival-tooltip::after {
+    content: '';
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    border: 5px solid transparent;
+    border-top-color: #1e293b;
+}
+
+/* Simple Mode (No Panchang) */
+.calendar-day.simple-mode {
+    min-height: 50px;
+    justify-content: flex-start;
+}
+
+.calendar-day.simple-mode .panchang-mini {
+    display: none;
+}
+
+.calendar-day.simple-mode .hindi-date {
+    display: none;
+}
+
+.calendar-day.simple-mode .moon-mini {
+    display: none;
+}
+
+/* ==================== RESPONSIVE ==================== */
+@media (max-width: 768px) {
+    .calendar-day {
+        min-height: 60px;
+        padding: 4px;
+    }
+
+    .date-number {
+        font-size: 0.9rem;
+    }
+
+    .tithi-text {
+        font-size: 0.55rem;
+    }
+
+    .nakshatra-text {
+        font-size: 0.5rem;
+    }
+
+    .hindi-date {
+        font-size: 0.5rem;
+        padding: 1px 3px;
+    }
+}
+
+@media (max-width: 480px) {
+    .calendar-day {
+        min-height: 45px;
+        padding: 3px;
+    }
+
+    .calendar-day .panchang-mini {
+        display: none;
+    }
+
+    .calendar-day .hindi-date {
+        display: none;
+    }
+
+    .date-number {
+        font-size: 0.85rem;
+    }
+}
+
+/* ==================== DARK MODE ==================== */
+[data-theme="dark"] .calendar-day {
+    background: #334155;
+    border-color: #475569;
+}
+
+[data-theme="dark"] .calendar-day:hover {
+    background: #475569;
+}
+
+[data-theme="dark"] .calendar-day.other-month {
+    background: transparent;
+}
+
+[data-theme="dark"] .date-number {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .tithi-text {
+    color: #a78bfa;
+}
+
+[data-theme="dark"] .nakshatra-text {
+    color: #94a3b8;
+}
+
+[data-theme="dark"] .hindi-date {
+    background: #44403c;
+    color: #fb923c;
+}
+
+[data-theme="dark"] .calendar-day.holiday {
+    background: linear-gradient(135deg, #450a0a 0%, #7f1d1d 100%);
+}
+
+[data-theme="dark"] .calendar-day.festival {
+    background: linear-gradient(135deg, #451a03 0%, #78350f 100%);
+}
+
+/* ==================== PANCHANG PANEL CONTENT ==================== */
+.panchang-section {
+    margin-bottom: 20px;
+}
+
+.panchang-section h4 {
+    font-size: 0.9rem;
+    color: #374151;
+    margin-bottom: 12px;
+    font-weight: 600;
+}
+
+.panchang-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.panchang-card {
+    background: #f8fafc;
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.panchang-icon {
+    font-size: 1.5rem;
+}
+
+.panchang-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.panchang-info .label {
+    font-size: 0.7rem;
+    color: #64748b;
+}
+
+.panchang-info .value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+/* Sun Moon Grid */
+.sun-moon-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.sun-moon-card {
+    padding: 12px;
+    border-radius: 12px;
+    text-align: center;
+}
+
+.sun-moon-card .icon {
+    font-size: 1.5rem;
+    display: block;
+    margin-bottom: 5px;
+}
+
+.sun-moon-card .label {
+    font-size: 0.7rem;
+    color: #64748b;
+    display: block;
+}
+
+.sun-moon-card .value {
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.sun-moon-card.sunrise {
+    background: #fef9c3;
+}
+
+.sun-moon-card.sunset {
+    background: #fed7aa;
+}
+
+.sun-moon-card.moon {
+    background: #e0e7ff;
+}
+
+.sun-moon-card.paksha {
+    background: #f3e8ff;
+}
+
+/* Rahu Kaal */
+.rahu-kaal-card {
+    background: #fee2e2;
+    border-radius: 12px;
+    padding: 12px 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rahu-icon {
+    font-size: 1.3rem;
+}
+
+.rahu-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.rahu-label {
+    font-size: 0.75rem;
+    color: #991b1b;
+}
+
+.rahu-time {
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #dc2626;
+}
+
+/* Transaction items in panel */
+.day-transactions .transaction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 10px;
+    margin-bottom: 8px;
+}
+
+.day-transactions .transaction-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.day-transactions .description {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+.day-transactions .category {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.day-transactions .amount {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.day-transactions .amount.income {
+    color: #10b981;
+}
+
+.day-transactions .amount.expense {
+    color: #ef4444;
+}
+
+/* Dark Mode */
+[data-theme="dark"] .panchang-section h4 {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .panchang-card {
+    background: #334155;
+}
+
+[data-theme="dark"] .panchang-info .value {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .sun-moon-card .value {
+    color: #1f2937;
+}
+
+[data-theme="dark"] .day-transactions .transaction-item {
+    background: #334155;
+}
+
+[data-theme="dark"] .day-transactions .description {
+    color: #f1f5f9;
+}
+
+/* ==================== DAY DETAILS SIDEBAR - COMPLETE ==================== */
+
+/* Overlay */
+.day-details-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.day-details-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+/* Sidebar Panel */
+.day-details-panel {
+    position: fixed;
+    top: 0;
+    right: -420px;
+    width: 400px;
+    height: 100vh;
+    background: white;
+    box-shadow: -5px 0 30px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+    overflow-y: auto;
+    transition: right 0.3s ease;
+}
+
+.day-details-panel.open {
+    right: 0;
+}
+
+/* Header */
+.day-details-header {
+    position: sticky;
+    top: 0;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    z-index: 10;
+}
+
+.day-details-header h3 {
+    margin: 0;
+    font-size: 1.1rem;
+    font-weight: 600;
+}
+
+.day-details-close {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.2);
+    border: none;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.day-details-close:hover {
+    background: rgba(255, 255, 255, 0.3);
+    transform: rotate(90deg);
+}
+
+/* Section Cards */
+.section-card {
+    background: white;
+    margin: 15px;
+    padding: 15px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+.section-card h4 {
+    margin: 0 0 12px 0;
+    font-size: 0.9rem;
+    color: #374151;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.section-card h4 i {
+    color: #667eea;
+}
+
+/* Highlight Card (Hindu Month) */
+.highlight-card {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    border: 1px solid #f59e0b;
+    text-align: center;
+}
+
+.hindu-month-display {
+    color: #78350f;
+}
+
+.hindu-month-display strong {
+    font-size: 1.1rem;
+}
+
+/* Panchang Grid */
+.panchang-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.panchang-card {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.panchang-icon {
+    font-size: 1.4rem;
+}
+
+.panchang-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.panchang-info .label {
+    font-size: 0.7rem;
+    color: #64748b;
+    text-transform: uppercase;
+}
+
+.panchang-info .value {
+    font-size: 0.85rem;
+    color: #1f2937;
+}
+
+/* Sun Moon Grid */
+.sun-moon-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.sun-moon-card {
+    padding: 12px;
+    border-radius: 10px;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.sun-moon-card .icon {
+    font-size: 1.5rem;
+}
+
+.sun-moon-card .label {
+    font-size: 0.65rem;
+    color: #64748b;
+    text-transform: uppercase;
+}
+
+.sun-moon-card .value {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: #1f2937;
+}
+
+.sun-moon-card.sunrise {
+    background: linear-gradient(135deg, #fef9c3 0%, #fef08a 100%);
+}
+
+.sun-moon-card.sunset {
+    background: linear-gradient(135deg, #fed7aa 0%, #fdba74 100%);
+}
+
+.sun-moon-card.moon {
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 100%);
+}
+
+.sun-moon-card.paksha {
+    background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
+}
+
+/* Rahu Kaal */
+.rahu-kaal-card {
+    background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+    border-radius: 10px;
+    padding: 15px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rahu-icon {
+    font-size: 1.5rem;
+}
+
+.rahu-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.rahu-label {
+    font-size: 0.75rem;
+    color: #991b1b;
+}
+
+.rahu-time {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #dc2626;
+}
+
+/* Guidance */
+.guidance-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.guidance-item {
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 0.85rem;
+}
+
+.guidance-item.auspicious {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.guidance-item.inauspicious {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+/* Transactions */
+.empty-state {
+    text-align: center;
+    padding: 20px;
+}
+
+.empty-icon {
+    font-size: 2.5rem;
+    display: block;
+    margin-bottom: 10px;
+}
+
+.empty-state p {
+    color: #64748b;
+    margin: 0 0 15px 0;
+}
+
+.add-transaction-btn {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.add-transaction-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+}
+
+/* Day Summary */
+.day-summary {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.day-summary .summary-item {
+    flex: 1;
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.day-summary .summary-item.income {
+    background: #dcfce7;
+}
+
+.day-summary .summary-item.expense {
+    background: #fee2e2;
+}
+
+.day-summary .label {
+    font-size: 0.7rem;
+    color: #64748b;
+    display: block;
+}
+
+.day-summary .value {
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.day-summary .income .value {
+    color: #10b981;
+}
+
+.day-summary .expense .value {
+    color: #ef4444;
+}
+
+/* Transaction List */
+.transactions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.transaction-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: #f8fafc;
+    border-radius: 10px;
+    border-left: 3px solid;
+}
+
+.transaction-item.income {
+    border-left-color: #10b981;
+}
+
+.transaction-item.expense {
+    border-left-color: #ef4444;
+}
+
+.trans-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.trans-icon {
+    font-size: 1.2rem;
+}
+
+.trans-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.trans-desc {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: #1f2937;
+}
+
+.trans-cat {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.trans-amount {
+    font-weight: 700;
+    font-size: 0.95rem;
+}
+
+.trans-amount.income {
+    color: #10b981;
+}
+
+.trans-amount.expense {
+    color: #ef4444;
+}
+
+/* Dark Mode */
+[data-theme="dark"] .day-details-panel {
+    background: #1e293b;
+}
+
+[data-theme="dark"] .section-card {
+    background: #334155;
+    box-shadow: none;
+}
+
+[data-theme="dark"] .section-card h4 {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .panchang-card {
+    background: #475569;
+}
+
+[data-theme="dark"] .panchang-info .value,
+[data-theme="dark"] .trans-desc {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .highlight-card {
+    background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
+    border-color: #b45309;
+}
+
+[data-theme="dark"] .hindu-month-display {
+    color: #fef3c7;
+}
+
+[data-theme="dark"] .transaction-item {
+    background: #475569;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .day-details-panel {
+        width: 100%;
+        right: -100%;
+    }
+
+    .panchang-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ==================== SIDEBAR PANEL - SIMPLE ==================== */
+.day-details-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: all 0.3s ease;
+}
+
+.day-details-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+
+.day-details-panel {
+    position: fixed;
+    top: 0;
+    right: -420px;
+    width: 400px;
+    height: 100vh;
+    background: white;
+    box-shadow: -5px 0 30px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+    overflow-y: auto;
+    transition: right 0.3s ease;
+}
+
+.day-details-panel.open {
+    right: 0;
+}
+
+/* Dark Mode */
+[data-theme="dark"] .day-details-panel {
+    background: #1e293b;
+    color: #f1f5f9;
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+    .day-details-panel {
+        width: 100%;
+        right: -100%;
+    }
+}

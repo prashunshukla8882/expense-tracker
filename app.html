@@ -579,16 +579,65 @@
             </section>
 
             <!-- Calendar Page -->
+            <!-- Calendar Page -->
             <section class="page" id="calendar">
                 <div class="page-header">
                     <h1>Calendar</h1>
-                    <div class="calendar-nav">
-                        <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
-                        <span id="currentMonth">January 2024</span>
-                        <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                    <div class="calendar-controls">
+                        <!-- Calendar Mode Toggle -->
+                        <div class="calendar-mode-toggle">
+                            <span class="mode-label">Simple</span>
+                            <label class="toggle-switch">
+                                <input type="checkbox" id="calendarModeToggle" onchange="toggleCalendarMode()">
+                                <span class="toggle-slider"></span>
+                            </label>
+                            <span class="mode-label">Indian 🇮🇳</span>
+                        </div>
+            
+                        <!-- Month Navigation -->
+                        <div class="calendar-nav">
+                            <button id="prevMonth"><i class="fas fa-chevron-left"></i></button>
+                            <span id="currentMonth">January 2025</span>
+                            <button id="nextMonth"><i class="fas fa-chevron-right"></i></button>
+                        </div>
                     </div>
                 </div>
-
+            
+                <!-- Indian Calendar Info Bar (Hidden in Simple Mode) -->
+                <div class="indian-calendar-bar animate-card" id="indianCalendarBar" style="display: none;">
+                    <div class="panchang-quick-view">
+                        <div class="panchang-item">
+                            <span class="panchang-label">Hindu Month</span>
+                            <span class="panchang-value" id="currentHinduMonth">-</span>
+                        </div>
+                        <div class="panchang-item">
+                            <span class="panchang-label">Paksha</span>
+                            <span class="panchang-value" id="currentPaksha">-</span>
+                        </div>
+                        <div class="panchang-item">
+                            <span class="panchang-label">Moon Phase</span>
+                            <span class="panchang-value" id="currentMoonPhase">-</span>
+                        </div>
+                        <div class="panchang-item">
+                            <span class="panchang-label">Season</span>
+                            <span class="panchang-value" id="currentSeason">-</span>
+                        </div>
+                    </div>
+                </div>
+            
+                <!-- Holiday Filter (Indian Mode) -->
+                <div class="holiday-filters animate-card" id="holidayFilters" style="display: none;">
+                    <span class="filter-label">Show:</span>
+                    <button class="filter-chip active" data-filter="all" onclick="filterHolidays('all')">All</button>
+                    <button class="filter-chip" data-filter="national" onclick="filterHolidays('national')">🇮🇳 National</button>
+                    <button class="filter-chip" data-filter="hindu" onclick="filterHolidays('hindu')">🕉️ Hindu</button>
+                    <button class="filter-chip" data-filter="islamic" onclick="filterHolidays('islamic')">☪️ Islamic</button>
+                    <button class="filter-chip" data-filter="christian" onclick="filterHolidays('christian')">✝️ Christian</button>
+                    <button class="filter-chip" data-filter="sikh" onclick="filterHolidays('sikh')">☬ Sikh</button>
+                    <button class="filter-chip" data-filter="regional" onclick="filterHolidays('regional')">📍 Regional</button>
+                </div>
+            
+                <!-- Calendar Grid -->
                 <div class="calendar-container animate-card">
                     <div class="calendar-header">
                         <span>Sun</span>
@@ -603,12 +652,144 @@
                         <!-- Calendar days will be inserted here -->
                     </div>
                 </div>
+            
+                <!-- Legend (Indian Mode) -->
+                <div class="calendar-legend animate-card" id="calendarLegend" style="display: none;">
+                    <h4>Legend</h4>
+                    <div class="legend-items">
+                        <div class="legend-item"><span class="legend-dot national"></span> National Holiday</div>
+                        <div class="legend-item"><span class="legend-dot hindu"></span> Hindu Festival</div>
+                        <div class="legend-item"><span class="legend-dot islamic"></span> Islamic</div>
+                        <div class="legend-item"><span class="legend-dot christian"></span> Christian</div>
+                        <div class="legend-item"><span class="legend-dot sikh"></span> Sikh</div>
+                        <div class="legend-item"><span class="legend-dot regional"></span> Regional</div>
+                    </div>
+                </div>
 
-                <!-- Day Details -->
-                <div class="day-details animate-card" id="dayDetails">
-                    <h3>Select a day to view transactions</h3>
-                    <div class="day-transactions" id="dayTransactions">
-                        <!-- Day transactions will be inserted here -->
+                <div class="day-details-panel animate-card" id="dayDetails"></div>
+            
+                <!-- Day Details Overlay -->
+                <div class="day-details-overlay" id="dayDetailsOverlay" onclick="closeDayDetails()"></div>
+                
+                <!-- Day Details Sidebar Panel -->
+                <div class="day-details-panel" id="dayDetails">
+                    <!-- Header -->
+                    <div class="day-details-header">
+                        <h3 id="selectedDateTitle">Select a day</h3>
+                        <button class="day-details-close" onclick="closeDayDetails()">
+                            <i class="fas fa-times"></i>
+                        </button>
+                    </div>
+                
+                    <!-- Simple View Content -->
+                    <div class="simple-view-content" id="simpleViewContent">
+                        <div class="section-card">
+                            <h4><i class="fas fa-exchange-alt"></i> Transactions</h4>
+                            <div class="day-transactions" id="dayTransactions">
+                                <p class="empty-message">No transactions on this day</p>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <!-- Indian View Content -->
+                    <div class="indian-view-content" id="indianViewContent" style="display: none;">
+                
+                        <!-- Hindu Month -->
+                        <div class="section-card highlight-card">
+                            <div class="hindu-month-display" id="panchangHinduMonth">
+                                <strong>-</strong>
+                            </div>
+                        </div>
+                
+                        <!-- Panchang Details -->
+                        <div class="section-card">
+                            <h4><i class="fas fa-calendar-alt"></i> Panchang</h4>
+                            <div class="panchang-grid">
+                                <div class="panchang-card">
+                                    <span class="panchang-icon">🗓️</span>
+                                    <div class="panchang-info">
+                                        <span class="label">Tithi</span>
+                                        <span class="value" id="panchangTithi">-</span>
+                                    </div>
+                                </div>
+                                <div class="panchang-card">
+                                    <span class="panchang-icon" id="nakshatraSymbol">⭐</span>
+                                    <div class="panchang-info">
+                                        <span class="label">Nakshatra</span>
+                                        <span class="value" id="panchangNakshatra">-</span>
+                                    </div>
+                                </div>
+                                <div class="panchang-card">
+                                    <span class="panchang-icon">🧘</span>
+                                    <div class="panchang-info">
+                                        <span class="label">Yoga</span>
+                                        <span class="value" id="panchangYoga">-</span>
+                                    </div>
+                                </div>
+                                <div class="panchang-card">
+                                    <span class="panchang-icon">⚡</span>
+                                    <div class="panchang-info">
+                                        <span class="label">Karan</span>
+                                        <span class="value" id="panchangKaran">-</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                
+                        <!-- Sun & Moon -->
+                        <div class="section-card">
+                            <h4><i class="fas fa-sun"></i> Sun & Moon</h4>
+                            <div class="sun-moon-grid">
+                                <div class="sun-moon-card sunrise">
+                                    <span class="icon">🌅</span>
+                                    <span class="label">Sunrise</span>
+                                    <span class="value" id="panchangSunrise">-</span>
+                                </div>
+                                <div class="sun-moon-card sunset">
+                                    <span class="icon">🌇</span>
+                                    <span class="label">Sunset</span>
+                                    <span class="value" id="panchangSunset">-</span>
+                                </div>
+                                <div class="sun-moon-card moon">
+                                    <span class="icon" id="moonPhaseIcon">🌙</span>
+                                    <span class="label">Moon Phase</span>
+                                    <span class="value" id="panchangMoonPhase">-</span>
+                                </div>
+                                <div class="sun-moon-card paksha">
+                                    <span class="icon">🌓</span>
+                                    <span class="label">Paksha</span>
+                                    <span class="value" id="panchangPaksha">-</span>
+                                </div>
+                            </div>
+                        </div>
+                
+                        <!-- Rahu Kaal -->
+                        <div class="section-card">
+                            <h4><i class="fas fa-exclamation-triangle"></i> Rahu Kaal</h4>
+                            <div class="rahu-kaal-card">
+                                <span class="rahu-icon">⛔</span>
+                                <div class="rahu-info">
+                                    <span class="rahu-label">Avoid important work during:</span>
+                                    <span class="rahu-time" id="panchangRahuKaal">-</span>
+                                </div>
+                            </div>
+                        </div>
+                
+                        <!-- Guidance -->
+                        <div class="section-card">
+                            <h4><i class="fas fa-star"></i> Today's Guidance</h4>
+                            <div class="guidance-list" id="panchangGuidance">
+                                <div class="guidance-item auspicious">✨ Good day for regular activities</div>
+                            </div>
+                        </div>
+                
+                        <!-- Transactions -->
+                        <div class="section-card">
+                            <h4><i class="fas fa-rupee-sign"></i> Transactions</h4>
+                            <div class="day-transactions" id="indianDayTransactions">
+                                <p class="empty-message">No transactions on this day</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -1558,10 +1739,10 @@
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chartjs-plugin-datalabels@2.0.0"></script>
     <script src="js/storage.js"></script>
     <script src="js/utils.js"></script>
     <script src="js/charts.js"></script>
+    <script src="js/indian-calendar.js"></script> <!-- BEFORE app.js -->
     <script src="js/app.js"></script>
     <script>
         // Authentication check and app initialization
@@ -1643,7 +1824,9 @@
                 return false; // Prevent default link behavior
             }
     </script>
-
+    <script src="js/indian-calendar.js"></script>
+    
+    
 </body>
 
 </html>

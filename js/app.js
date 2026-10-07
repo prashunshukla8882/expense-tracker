@@ -1,6 +1,7 @@
 // ==================== APP.JS - COMPLETE EXPENSE TRACKER APPLICATION ====================
 
 const App = {
+    
     // ==================== STATE VARIABLES ====================
     currentPage: "dashboard",
     editingTransaction: null,
@@ -13,7 +14,10 @@ const App = {
 
     // ==================== INITIALIZATION ====================
     async init() {
-        console.log("Initializing ExpenseFlow App...");
+      console.log("Initializing ExpenseFlow App...");
+      
+      // Initialize calendar date
+        this.currentCalendarDate = new Date();
 
         // Initialize all modules (these don't need async)
         this.initSplashScreen();
@@ -49,6 +53,14 @@ const App = {
         this.updateCurrentDate();
 
         console.log("App initialized successfully!");
+  
+      // Helper: Format date as YYYY-MM-DD in LOCAL timezone
+      function toLocalDateString(date) {
+          const y = date.getFullYear();
+          const m = String(date.getMonth() + 1).padStart(2, '0');
+          const d = String(date.getDate()).padStart(2, '0');
+          return `${y}-${m}-${d}`;
+      }
   },
     
     // Update all currency symbols in UI
@@ -1425,104 +1437,494 @@ async updateCurrencySymbols() {
 
     // ==================== CALENDAR PAGE ====================
     initCalendar() {
-        const prevBtn = document.getElementById("prevMonth");
-        const nextBtn = document.getElementById("nextMonth");
+    // Previous month button
+    const prevBtn = document.getElementById('prevMonth');
+    if (prevBtn) {
+        prevBtn.addEventListener('click', () => {
+            this.currentCalendarDate.setMonth(this.currentCalendarDate.getMonth() - 1);
+            this.loadCalendar();
+        });
+    }
+    
+    // Next month button
+    const nextBtn = document.getElementById('nextMonth');
+    if (nextBtn) {
+        nextBtn.addEventListener('click', () => {
+            this.currentCalendarDate.setMonth(this.currentCalendarDate.getMonth() + 1);
+            this.loadCalendar();
+        });
+    }
+},
 
-        if (prevBtn) {
-            prevBtn.addEventListener("click", async () => {
-                this.currentCalendarMonth.setMonth(this.currentCalendarMonth.getMonth() - 1);
-                await this.loadCalendar();
-            });
+    // ==================== CALENDAR RENDERING ====================
+async renderCalendarDay(date, isCurrentMonth, holidays, transactions) {
+    // ✅ FIX: Format date in local timezone
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    const dateStr = `${year}-${month}-${day}`;
+    const isToday = dateStr === new Date().toISOString().split('T')[0];
+    const dayOfWeek = date.getDay();
+    const isSunday = dayOfWeek === 0;
+    
+    // Get Panchang data for Indian mode
+    let panchangData = null;
+    if (IndianCalendar.mode === 'indian') {
+        panchangData = await IndianCalendar.getPanchang(date);
+    }
+    
+    // Check for holidays/festivals
+    const dayHolidays = holidays[dateStr] || [];
+    const hasHoliday = dayHolidays.some(h => h.type === 'national');
+    const hasFestival = dayHolidays.length > 0;
+    
+    // Check for transactions
+    const dayTransactions = transactions.filter(t => t.date === dateStr);
+    const hasTransactions = dayTransactions.length > 0;
+    
+    // Build CSS classes
+    let classes = ['calendar-day'];
+    if (!isCurrentMonth) classes.push('other-month');
+    if (isToday) classes.push('today');
+    if (isSunday) classes.push('sunday');
+    if (hasHoliday) classes.push('holiday');
+    else if (hasFestival) classes.push('festival');
+    if (IndianCalendar.mode === 'simple') classes.push('simple-mode');
+    
+    // Build HTML
+    let html = `
+        <div class="${classes.join(' ')}" data-date="${dateStr}" onclick="App.selectCalendarDay('${dateStr}')">
+            <!-- Date Row -->
+            <div class="date-row">
+                <span class="date-number">${date.getDate()}</span>
+                ${panchangData ? `<span class="hindi-date">${panchangData.tithi.number}</span>` : ''}
+            </div>
+    `;
+    
+    // Indian mode: Add Panchang info
+    if (IndianCalendar.mode === 'indian' && panchangData && isCurrentMonth) {
+        html += `
+            <div class="panchang-mini">
+                <span class="tithi-text">${panchangData.tithi.name}</span>
+                <span class="nakshatra-text">${panchangData.nakshatra.symbol} ${panchangData.nakshatra.name.split(' ')[0]}</span>
+            </div>
+        `;
+    }
+    
+    // Event indicators
+    if (dayHolidays.length > 0 || hasTransactions) {
+        html += `<div class="event-indicators">`;
+        
+        // Festival emojis (max 2)
+        dayHolidays.slice(0, 2).forEach(h => {
+            html += `<span class="event-emoji">${h.image || '📅'}</span>`;
+        });
+        
+        // Event dots for overflow
+        if (dayHolidays.length > 2) {
+            html += `<span class="event-emoji">+${dayHolidays.length - 2}</span>`;
         }
-
-        if (nextBtn) {
-            nextBtn.addEventListener("click", async () => {
-                this.currentCalendarMonth.setMonth(this.currentCalendarMonth.getMonth() + 1);
-                await this.loadCalendar();
-            });
+        
+        html += `</div>`;
+    }
+    
+    // Transaction indicator
+    if (hasTransactions) {
+        html += `<div class="transaction-indicator" title="${dayTransactions.length} transaction(s)"></div>`;
+    }
+    
+    // Moon phase (only for Indian mode on certain days)
+    if (IndianCalendar.mode === 'indian' && panchangData && isCurrentMonth) {
+        const moonPhase = panchangData.moonPhase;
+        if (moonPhase.name === 'Full Moon' || moonPhase.name === 'New Moon') {
+            html += `<span class="moon-mini">${moonPhase.emoji}</span>`;
         }
-    },
+    }
+    
+    // Festival tooltip
+    if (dayHolidays.length > 0) {
+        const names = dayHolidays.map(h => h.name).join(', ');
+        html += `<div class="festival-tooltip">${names}</div>`;
+    }
+    
+    html += `</div>`;
+    
+    return html;
+},
 
-    async loadCalendar() {
+// Full calendar render
+// ==================== CALENDAR FUNCTIONS ====================
+async loadCalendar(filter = 'all') {
+    const grid = document.getElementById('calendarGrid');
+    if (!grid) return;
+
+    const year = this.currentCalendarDate.getFullYear();
+    const month = this.currentCalendarDate.getMonth();
+
+    // Update month display
+    const monthDisplay = document.getElementById('currentMonth');
+    if (monthDisplay) {
+        monthDisplay.textContent = new Date(year, month).toLocaleDateString('en-US', {
+            month: 'long',
+            year: 'numeric'
+        });
+    }
+
+    // Check calendar mode
+    const isIndianMode = typeof IndianCalendar !== 'undefined' && IndianCalendar.mode === 'indian';
+
+    // Show/hide Indian calendar elements
+    const indianBar = document.getElementById('indianCalendarBar');
+    const holidayFilters = document.getElementById('holidayFilters');
+    const calendarLegend = document.getElementById('calendarLegend');
+
+    if (indianBar) indianBar.style.display = isIndianMode ? 'block' : 'none';
+    if (holidayFilters) holidayFilters.style.display = isIndianMode ? 'flex' : 'none';
+    if (calendarLegend) calendarLegend.style.display = isIndianMode ? 'block' : 'none';
+
+    // Get holidays if in Indian mode
+    let holidays = {};
+    if (isIndianMode && typeof IndianCalendar !== 'undefined') {
         try {
-            const year = this.currentCalendarMonth.getFullYear();
-            const month = this.currentCalendarMonth.getMonth();
-            const transactions = await Storage.getTransactions();
-
-            // Update month display
-            const monthDisplay = document.getElementById("currentMonth");
-            if (monthDisplay) {
-                monthDisplay.textContent = new Date(year, month).toLocaleDateString("en-US", {
-                    month: "long",
-                    year: "numeric",
-                });
-            }
-
-            const firstDay = Utils.getFirstDayOfMonth(year, month);
-            const daysInMonth = Utils.getDaysInMonth(year, month);
-            const daysInPrevMonth = Utils.getDaysInMonth(year, month - 1);
-
-            const grid = document.getElementById("calendarGrid");
-            if (!grid) return;
-
-            grid.innerHTML = "";
-
-            // Previous month days
-            for (let i = firstDay - 1; i >= 0; i--) {
-                const day = daysInPrevMonth - i;
-                grid.innerHTML += `<div class="calendar-day other-month"><span class="day-number">${day}</span></div>`;
-            }
-
-            // Current month days
-            const today = new Date();
-            const transactionsArray = Array.isArray(transactions) ? transactions : [];
+            holidays = await IndianCalendar.fetchHolidays(year);
             
-            for (let day = 1; day <= daysInMonth; day++) {
-                const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
-                const dayTransactions = transactionsArray.filter((t) => t.date === dateStr);
-                const hasIncome = dayTransactions.some((t) => t.type === "income");
-                const hasExpense = dayTransactions.some((t) => t.type === "expense");
-                const isToday = today.getDate() === day && today.getMonth() === month && today.getFullYear() === year;
-
-                let indicators = "";
-                if (hasIncome || hasExpense) {
-                    indicators = `<div class="day-indicator">
-                        ${hasIncome ? '<span class="dot income"></span>' : ""}
-                        ${hasExpense ? '<span class="dot expense"></span>' : ""}
-                    </div>`;
-                }
-
-                grid.innerHTML += `
-                    <div class="calendar-day ${isToday ? "today" : ""}" data-date="${dateStr}">
-                        <span class="day-number">${day}</span>
-                        ${indicators}
-                    </div>
-                `;
-            }
-
-            // Next month days
-            const totalCells = 42;
-            const remainingCells = totalCells - (firstDay + daysInMonth);
-            for (let day = 1; day <= remainingCells; day++) {
-                grid.innerHTML += `<div class="calendar-day other-month"><span class="day-number">${day}</span></div>`;
-            }
-
-            // Add click handlers
-            grid.querySelectorAll(".calendar-day:not(.other-month)").forEach((dayEl) => {
-                dayEl.addEventListener("click", async () => {
-                    grid.querySelectorAll(".calendar-day").forEach((d) => d.classList.remove("selected"));
-                    dayEl.classList.add("selected");
-                    await this.loadDayTransactions(dayEl.dataset.date);
+            // Apply filter
+            if (filter !== 'all') {
+                const filtered = {};
+                Object.entries(holidays).forEach(([date, events]) => {
+                    const matchingEvents = events.filter(e => e.type === filter);
+                    if (matchingEvents.length > 0) {
+                        filtered[date] = matchingEvents;
+                    }
                 });
-            });
-
-            // Load today's transactions by default
-            const todayStr = today.toISOString().split("T")[0];
-            await this.loadDayTransactions(todayStr);
+                holidays = filtered;
+            }
         } catch (error) {
-            console.error('loadCalendar error:', error);
+            console.error('Error fetching holidays:', error);
         }
-    },
+
+        // Update Panchang quick view
+        if (typeof updatePanchangQuickView === 'function') {
+            await updatePanchangQuickView();
+        }
+    }
+
+    // Get transactions for indicators
+    let transactions = [];
+    try {
+        transactions = await Storage.getTransactions();
+        if (!Array.isArray(transactions)) transactions = [];
+    } catch (error) {
+        console.error('Error fetching transactions:', error);
+    }
+
+    // Calculate calendar days
+    const firstDayOfMonth = new Date(year, month, 1);
+    const lastDayOfMonth = new Date(year, month + 1, 0);
+    const startingDay = firstDayOfMonth.getDay(); // 0 = Sunday
+    const totalDays = lastDayOfMonth.getDate();
+
+    // Get previous month's days to fill
+    const prevMonthLastDay = new Date(year, month, 0).getDate();
+
+    // Today's date for highlighting
+    const today = new Date();
+    const todayYear = today.getFullYear();
+    const todayMonth = String(today.getMonth() + 1).padStart(2, '0');
+    const todayDay = String(today.getDate()).padStart(2, '0');
+    const todayStr = `${todayYear}-${todayMonth}-${todayDay}`;  // ✅ CORRECT 
+
+    let html = '';
+
+    // Previous month days
+    for (let i = startingDay - 1; i >= 0; i--) {
+        const day = prevMonthLastDay - i;
+        const date = new Date(year, month - 1, day);
+        html += this.renderCalendarCell(date, false, isIndianMode, holidays, transactions, todayStr);
+    }
+
+    // Current month days
+    for (let day = 1; day <= totalDays; day++) {
+        const date = new Date(year, month, day);
+        html += this.renderCalendarCell(date, true, isIndianMode, holidays, transactions, todayStr);
+    }
+
+    // Next month days to fill remaining cells (total 42 cells = 6 rows)
+    const totalCells = 42;
+    const filledCells = startingDay + totalDays;
+    const remainingCells = totalCells - filledCells;
+
+    for (let day = 1; day <= remainingCells; day++) {
+        const date = new Date(year, month + 1, day);
+        html += this.renderCalendarCell(date, false, isIndianMode, holidays, transactions, todayStr);
+    }
+
+    grid.innerHTML = html;
+},
+
+// Render single calendar cell
+// Render single calendar cell with Panchang data
+renderCalendarCell(date, isCurrentMonth, isIndianMode, holidays, transactions, todayStr) {
+    const dateStr = formatDateString(date);
+    const dayNum = date.getDate();
+    const dayOfWeek = date.getDay();
+    const isSunday = dayOfWeek === 0;
+    const isSaturday = dayOfWeek === 6;
+    const isToday = dateStr === todayStr;
+
+    // Get holidays for this date
+    const dayHolidays = holidays[dateStr] || [];
+    const hasNationalHoliday = dayHolidays.some(h => h.type === 'national');
+    const hasFestival = dayHolidays.length > 0;
+
+    // Get transactions for this date
+    const dayTransactions = transactions.filter(t => t.date === dateStr);
+    const hasTransactions = dayTransactions.length > 0;
+
+    // Build CSS classes
+    let classes = ['calendar-day'];
+    if (!isCurrentMonth) classes.push('other-month');
+    if (isToday) classes.push('today');
+    if (isSunday) classes.push('sunday');
+    if (isSaturday) classes.push('saturday');
+    if (hasNationalHoliday) classes.push('holiday');
+    else if (hasFestival) classes.push('festival');
+    if (!isIndianMode) classes.push('simple-mode');
+
+    // Get Panchang data
+    let panchang = null;
+    if (isIndianMode && isCurrentMonth && typeof IndianCalendar !== 'undefined') {
+        try {
+            panchang = IndianCalendar.getPanchangSync(date);
+        } catch (e) {
+            console.error('Panchang error:', e);
+        }
+    }
+
+    // Build HTML
+    let html = `<div class="${classes.join(' ')}" data-date="${dateStr}" onclick="App.selectCalendarDay('${dateStr}')">`;
+
+    // Date row with Tithi number
+    html += `<div class="date-row">`;
+    html += `<span class="date-number">${dayNum}</span>`;
+    if (panchang && panchang.tithi) {
+        html += `<span class="hindi-date">${panchang.tithi.number || ''}</span>`;
+    }
+    html += `</div>`;
+
+    // Panchang info (Indian mode only, current month only)
+    if (isIndianMode && isCurrentMonth && panchang) {
+        html += `<div class="panchang-mini">`;
+        
+        // Tithi name
+        if (panchang.tithi) {
+            html += `<span class="tithi-text">${panchang.tithi.name || ''}</span>`;
+        }
+        
+        // Nakshatra with symbol
+        if (panchang.nakshatra) {
+            const nakshatraShort = (panchang.nakshatra.name || '').split(' ')[0];
+            html += `<span class="nakshatra-text">${panchang.nakshatra.symbol || '⭐'} ${nakshatraShort}</span>`;
+        }
+        
+        html += `</div>`;
+    }
+
+    // Event indicators (festivals, holidays)
+    if (isCurrentMonth && (dayHolidays.length > 0 || hasTransactions)) {
+        html += `<div class="event-indicators">`;
+        
+        // Show festival emojis (max 2)
+        dayHolidays.slice(0, 2).forEach(h => {
+            html += `<span class="event-emoji">${h.image || '📅'}</span>`;
+        });
+        
+        // Show overflow count
+        if (dayHolidays.length > 2) {
+            html += `<span class="event-overflow">+${dayHolidays.length - 2}</span>`;
+        }
+        
+        html += `</div>`;
+    }
+
+    // Transaction indicator dot
+    if (hasTransactions && isCurrentMonth) {
+        html += `<span class="transaction-dot" title="${dayTransactions.length} transaction(s)"></span>`;
+    }
+
+    // Moon phase on Purnima/Amavasya
+    if (isIndianMode && isCurrentMonth && panchang && panchang.moonPhase) {
+        if (panchang.moonPhase.name === 'Full Moon' || panchang.moonPhase.name === 'New Moon') {
+            html += `<span class="moon-mini">${panchang.moonPhase.emoji}</span>`;
+        }
+    }
+
+    // Tooltip for festivals
+    if (dayHolidays.length > 0 && isCurrentMonth) {
+        const names = dayHolidays.map(h => h.name).join(', ');
+        html += `<div class="festival-tooltip">${names}</div>`;
+    }
+
+    html += `</div>`;
+
+    return html;
+},
+
+// Simple Panchang fallback (no async)
+getSimplePanchang(date) {
+    const tithis = [
+        'Pratipada', 'Dwitiya', 'Tritiya', 'Chaturthi', 'Panchami',
+        'Shashthi', 'Saptami', 'Ashtami', 'Navami', 'Dashami',
+        'Ekadashi', 'Dwadashi', 'Trayodashi', 'Chaturdashi', 'Purnima', 'Amavasya'
+    ];
+    
+    // Simple calculation based on moon cycle
+    const knownNewMoon = new Date('2024-01-11');
+    const daysSince = Math.floor((date - knownNewMoon) / (1000 * 60 * 60 * 24));
+    const moonAge = daysSince % 30;
+    
+    let tithiIndex = Math.floor(moonAge / 2);
+    if (tithiIndex > 14) tithiIndex = 15; // Amavasya
+    if (moonAge >= 14 && moonAge < 16) tithiIndex = 14; // Purnima
+    
+    return {
+        tithi: tithis[tithiIndex] || 'Pratipada',
+        tithiNum: (tithiIndex + 1).toString()
+    };
+},
+
+// Select calendar day
+async selectCalendarDay(dateStr) {
+    // Remove previous selection
+    document.querySelectorAll('.calendar-day.selected').forEach(el => {
+        el.classList.remove('selected');
+    });
+
+    // Add selection to clicked day
+    const dayEl = document.querySelector(`.calendar-day[data-date="${dateStr}"]`);
+    if (dayEl) {
+        dayEl.classList.add('selected');
+    }
+
+    // Update day details
+    await this.showDayDetails(dateStr);
+},
+
+// Show day details in panel
+async showDayDetails(dateStr) {
+    const isIndianMode = typeof IndianCalendar !== 'undefined' && IndianCalendar.mode === 'indian';
+    
+    // Update title
+    const titleEl = document.getElementById('selectedDateTitle');
+    if (titleEl) {
+        titleEl.textContent = Utils.formatDate(dateStr, 'long');
+    }
+
+    // Show appropriate content
+    const simpleContent = document.getElementById('simpleViewContent');
+    const indianContent = document.getElementById('indianViewContent');
+    
+    if (simpleContent) simpleContent.style.display = isIndianMode ? 'none' : 'block';
+    if (indianContent) indianContent.style.display = isIndianMode ? 'block' : 'none';
+
+    if (isIndianMode && typeof showDayPanchang === 'function') {
+        await showDayPanchang(dateStr);
+    }
+
+    // Load transactions for this day
+    await this.loadDayTransactions(dateStr);
+
+    // Open panel
+    const panel = document.getElementById('dayDetails');
+    const overlay = document.getElementById('dayDetailsOverlay');
+    
+    if (panel) panel.classList.add('open');
+    if (overlay) overlay.classList.add('open');
+},
+
+// Load transactions for selected day
+async loadDayTransactions(dateStr) {
+    const containerId = IndianCalendar?.mode === 'indian' ? 'indianDayTransactions' : 'dayTransactions';
+    const container = document.getElementById(containerId);
+    
+    if (!container) return;
+
+    try {
+        const transactions = await Storage.getTransactions();
+        const dayTransactions = Array.isArray(transactions) ? 
+            transactions.filter(t => t.date === dateStr) : [];
+
+        if (dayTransactions.length === 0) {
+            container.innerHTML = '<p class="empty-message">No transactions on this day</p>';
+        } else {
+            container.innerHTML = dayTransactions.map(t => `
+                <div class="transaction-item ${t.type}">
+                    <div class="transaction-info">
+                        <span class="description">${t.description}</span>
+                        <span class="category">${t.category}</span>
+                    </div>
+                    <span class="amount ${t.type}">
+                        ${t.type === 'income' ? '+' : '-'}${Utils.formatCurrency(t.amount)}
+                    </span>
+                </div>
+            `).join('');
+        }
+    } catch (error) {
+        console.error('Error loading day transactions:', error);
+        container.innerHTML = '<p class="empty-message">Error loading transactions</p>';
+    }
+},
+
+// Select calendar day
+async selectCalendarDay(dateStr) {
+    // Remove previous selection
+    document.querySelectorAll('.calendar-day.selected').forEach(el => {
+        el.classList.remove('selected');
+    });
+    
+    // Add selection to clicked day
+    const dayEl = document.querySelector(`.calendar-day[data-date="${dateStr}"]`);
+    if (dayEl) {
+        dayEl.classList.add('selected');
+    }
+    
+    // Show day details panel
+    if (IndianCalendar.mode === 'indian') {
+        await showDayPanchang(dateStr);
+    } else {
+        await this.showSimpleDayDetails(dateStr);
+    }
+    
+    // Open panel
+    document.getElementById('dayDetails').classList.add('open');
+    document.getElementById('dayDetailsOverlay')?.classList.add('open');
+},
+
+async showSimpleDayDetails(dateStr) {
+    document.getElementById('selectedDateTitle').textContent = 
+        Utils.formatDate(dateStr, 'long');
+    
+    const transactions = await Storage.getTransactions();
+    const dayTransactions = transactions.filter(t => t.date === dateStr);
+    
+    const container = document.getElementById('dayTransactions');
+    
+    if (dayTransactions.length === 0) {
+        container.innerHTML = '<p class="empty-message">No transactions on this day</p>';
+    } else {
+        container.innerHTML = dayTransactions.map(t => `
+            <div class="transaction-item ${t.type}">
+                <div class="transaction-info">
+                    <span class="description">${t.description}</span>
+                    <span class="category">${t.category}</span>
+                </div>
+                <span class="amount ${t.type}">
+                    ${t.type === 'income' ? '+' : '-'}${Utils.formatCurrency(t.amount)}
+                </span>
+            </div>
+        `).join('');
+    }
+},
 
     async loadDayTransactions(date) {
         const container = document.getElementById("dayDetails");
@@ -3529,4 +3931,1067 @@ if ("serviceWorker" in navigator) {
                 console.log("ServiceWorker registration failed:", error);
             });
     });
+}
+
+// ==================== INDIAN CALENDAR FUNCTIONS ====================
+
+function toggleCalendarMode() {
+    const toggle = document.getElementById('calendarModeToggle');
+    const mode = toggle.checked ? 'indian' : 'simple';
+    
+    IndianCalendar.saveMode(mode);
+    updateCalendarUI(mode);
+    App.loadCalendar();
+}
+
+function updateCalendarUI(mode) {
+    const indianBar = document.getElementById('indianCalendarBar');
+    const holidayFilters = document.getElementById('holidayFilters');
+    const calendarLegend = document.getElementById('calendarLegend');
+    const simpleContent = document.getElementById('simpleViewContent');
+    const indianContent = document.getElementById('indianViewContent');
+    
+    if (mode === 'indian') {
+        indianBar.style.display = 'block';
+        holidayFilters.style.display = 'flex';
+        calendarLegend.style.display = 'block';
+        simpleContent.style.display = 'none';
+        indianContent.style.display = 'block';
+        
+        // Update Panchang quick view
+        updatePanchangQuickView();
+    } else {
+        indianBar.style.display = 'none';
+        holidayFilters.style.display = 'none';
+        calendarLegend.style.display = 'none';
+        simpleContent.style.display = 'block';
+        indianContent.style.display = 'none';
+    }
+}
+
+async function updatePanchangQuickView() {
+    const today = new Date();
+    const panchang = await IndianCalendar.getPanchang(today);
+    
+    document.getElementById('currentHinduMonth').textContent = 
+        `${panchang.hinduMonth.name} (${panchang.hinduMonth.nameHi})`;
+    document.getElementById('currentPaksha').textContent = 
+        panchang.paksha.nameHi;
+    document.getElementById('currentMoonPhase').textContent = 
+        `${panchang.moonPhase.emoji} ${panchang.moonPhase.name}`;
+    document.getElementById('currentSeason').textContent = 
+        panchang.hinduMonth.season;
+}
+
+async function showDayPanchang(dateStr) {
+    const date = new Date(dateStr);
+    const panchang = await IndianCalendar.getPanchang(date);
+    
+    // Update title
+    document.getElementById('selectedDateTitle').textContent = 
+        Utils.formatDate(dateStr, 'long');
+    
+    // Update Panchang details
+    document.getElementById('panchangTithi').textContent = 
+        `${panchang.tithi.name} (${panchang.tithi.nameHi})`;
+    document.getElementById('panchangNakshatra').textContent = 
+        `${panchang.nakshatra.name} (${panchang.nakshatra.nameHi})`;
+    document.getElementById('nakshatraSymbol').textContent = 
+        panchang.nakshatra.symbol;
+    document.getElementById('panchangYoga').textContent = 
+        panchang.yoga.name;
+    document.getElementById('panchangKaran').textContent = 
+        panchang.karan.name;
+    
+    // Sun & Moon
+    document.getElementById('panchangSunrise').textContent = panchang.sunrise;
+    document.getElementById('panchangSunset').textContent = panchang.sunset;
+    document.getElementById('moonPhaseIcon').textContent = panchang.moonPhase.emoji;
+    document.getElementById('panchangMoonPhase').textContent = panchang.moonPhase.name;
+    document.getElementById('panchangPaksha').textContent = 
+        `${panchang.paksha.name} (${panchang.paksha.nameHi})`;
+    
+    // Rahu Kaal
+    document.getElementById('panchangRahuKaal').textContent = panchang.rahuKaal.time;
+    
+    // Guidance
+    const guidanceEl = document.getElementById('panchangGuidance');
+    let guidanceHTML = '';
+    
+    panchang.auspicious.auspicious.forEach(item => {
+        guidanceHTML += `<div class="guidance-item auspicious">${item}</div>`;
+    });
+    panchang.auspicious.inauspicious.forEach(item => {
+        guidanceHTML += `<div class="guidance-item inauspicious">${item}</div>`;
+    });
+    
+    if (!guidanceHTML) {
+        guidanceHTML = '<div class="guidance-item auspicious">✨ Regular day - Good for routine activities</div>';
+    }
+    
+    guidanceEl.innerHTML = guidanceHTML;
+    
+    // Festivals
+    const year = date.getFullYear();
+    const holidays = await IndianCalendar.fetchHolidays(year);
+    const dayHolidays = holidays[dateStr];
+    
+    const festivalsSection = document.getElementById('dayFestivalsSection');
+    const festivalsList = document.getElementById('dayFestivals');
+    
+    if (dayHolidays && dayHolidays.length > 0) {
+        festivalsSection.style.display = 'block';
+        festivalsList.innerHTML = dayHolidays.map(h => `
+            <div class="festival-card">
+                <span class="emoji">${h.image || '📅'}</span>
+                <div class="info">
+                    <div class="name">${h.name}</div>
+                    ${h.description ? `<div class="description">${h.description}</div>` : ''}
+                </div>
+                <span class="type-badge ${h.type}">${h.type}</span>
+            </div>
+        `).join('');
+    } else {
+        festivalsSection.style.display = 'none';
+    }
+}
+
+function filterHolidays(filter) {
+    // Update active filter
+    document.querySelectorAll('.holiday-filters .filter-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.filter === filter);
+    });
+    
+    // Re-render calendar with filter
+    App.loadCalendar(filter);
+}
+
+
+// ==================== CALENDAR HELPER FUNCTIONS ====================
+
+// Toggle calendar mode
+function toggleCalendarMode() {
+    const toggle = document.getElementById('calendarModeToggle');
+    if (!toggle) return;
+    
+    const mode = toggle.checked ? 'indian' : 'simple';
+    
+    if (typeof IndianCalendar !== 'undefined') {
+        IndianCalendar.mode = mode;
+        localStorage.setItem('calendarMode', mode);
+    }
+    
+    // Reload calendar
+    if (typeof App !== 'undefined' && App.loadCalendar) {
+        App.loadCalendar();
+    }
+}
+
+// Update Panchang quick view bar
+async function updatePanchangQuickView() {
+    if (typeof IndianCalendar === 'undefined') return;
+    
+    const today = new Date();
+    
+    try {
+        const panchang = await IndianCalendar.getPanchang(today);
+        
+        const hinduMonthEl = document.getElementById('currentHinduMonth');
+        const pakshaEl = document.getElementById('currentPaksha');
+        const moonPhaseEl = document.getElementById('currentMoonPhase');
+        const seasonEl = document.getElementById('currentSeason');
+        
+        if (hinduMonthEl && panchang.hinduMonth) {
+            hinduMonthEl.textContent = `${panchang.hinduMonth.name} (${panchang.hinduMonth.nameHi})`;
+        }
+        if (pakshaEl && panchang.paksha) {
+            pakshaEl.textContent = panchang.paksha.nameHi || panchang.paksha.name;
+        }
+        if (moonPhaseEl && panchang.moonPhase) {
+            moonPhaseEl.textContent = `${panchang.moonPhase.emoji} ${panchang.moonPhase.name}`;
+        }
+        if (seasonEl && panchang.hinduMonth) {
+            seasonEl.textContent = panchang.hinduMonth.season;
+        }
+    } catch (error) {
+        console.error('Error updating Panchang view:', error);
+    }
+}
+
+// Show detailed Panchang for selected day
+async function showDayPanchang(dateStr) {
+    if (typeof IndianCalendar === 'undefined') return;
+    
+    const date = new Date(dateStr);
+    
+    try {
+        const panchang = await IndianCalendar.getPanchang(date);
+        
+        // Update Panchang details
+        const tithiEl = document.getElementById('panchangTithi');
+        const nakshatraEl = document.getElementById('panchangNakshatra');
+        const yogaEl = document.getElementById('panchangYoga');
+        const karanEl = document.getElementById('panchangKaran');
+        const sunriseEl = document.getElementById('panchangSunrise');
+        const sunsetEl = document.getElementById('panchangSunset');
+        const moonPhaseEl = document.getElementById('panchangMoonPhase');
+        const moonIconEl = document.getElementById('moonPhaseIcon');
+        const pakshaEl = document.getElementById('panchangPaksha');
+        const rahuKaalEl = document.getElementById('panchangRahuKaal');
+        const guidanceEl = document.getElementById('panchangGuidance');
+        const nakshatraSymbol = document.getElementById('nakshatraSymbol');
+        
+        if (tithiEl && panchang.tithi) {
+            tithiEl.textContent = `${panchang.tithi.name} (${panchang.tithi.nameHi || ''})`;
+        }
+        if (nakshatraEl && panchang.nakshatra) {
+            nakshatraEl.textContent = `${panchang.nakshatra.name} (${panchang.nakshatra.nameHi || ''})`;
+        }
+        if (nakshatraSymbol && panchang.nakshatra) {
+            nakshatraSymbol.textContent = panchang.nakshatra.symbol || '⭐';
+        }
+        if (yogaEl && panchang.yoga) {
+            yogaEl.textContent = panchang.yoga.name;
+        }
+        if (karanEl && panchang.karan) {
+            karanEl.textContent = panchang.karan.name;
+        }
+        if (sunriseEl) {
+            sunriseEl.textContent = panchang.sunrise || '6:00 AM';
+        }
+        if (sunsetEl) {
+            sunsetEl.textContent = panchang.sunset || '6:00 PM';
+        }
+        if (moonPhaseEl && panchang.moonPhase) {
+            moonPhaseEl.textContent = panchang.moonPhase.name;
+        }
+        if (moonIconEl && panchang.moonPhase) {
+            moonIconEl.textContent = panchang.moonPhase.emoji || '🌙';
+        }
+        if (pakshaEl && panchang.paksha) {
+            pakshaEl.textContent = `${panchang.paksha.name} (${panchang.paksha.nameHi || ''})`;
+        }
+        if (rahuKaalEl && panchang.rahuKaal) {
+            rahuKaalEl.textContent = panchang.rahuKaal.time || '-';
+        }
+        
+        // Guidance
+        if (guidanceEl && panchang.auspicious) {
+            let guidanceHTML = '';
+            
+            if (panchang.auspicious.auspicious) {
+                panchang.auspicious.auspicious.forEach(item => {
+                    guidanceHTML += `<div class="guidance-item auspicious">${item}</div>`;
+                });
+            }
+            if (panchang.auspicious.inauspicious) {
+                panchang.auspicious.inauspicious.forEach(item => {
+                    guidanceHTML += `<div class="guidance-item inauspicious">${item}</div>`;
+                });
+            }
+            
+            if (!guidanceHTML) {
+                guidanceHTML = '<div class="guidance-item auspicious">✨ Good day for regular activities</div>';
+            }
+            
+            guidanceEl.innerHTML = guidanceHTML;
+        }
+        
+        // Festivals
+        const year = date.getFullYear();
+        const holidays = await IndianCalendar.fetchHolidays(year);
+        const dayHolidays = holidays[dateStr];
+        
+        const festivalsSection = document.getElementById('dayFestivalsSection');
+        const festivalsList = document.getElementById('dayFestivals');
+        
+        if (festivalsSection && festivalsList) {
+            if (dayHolidays && dayHolidays.length > 0) {
+                festivalsSection.style.display = 'block';
+                festivalsList.innerHTML = dayHolidays.map(h => `
+                    <div class="festival-card">
+                        <span class="emoji">${h.image || '📅'}</span>
+                        <div class="info">
+                            <div class="name">${h.name}</div>
+                            ${h.description ? `<div class="description">${h.description}</div>` : ''}
+                        </div>
+                        <span class="type-badge ${h.type}">${h.type}</span>
+                    </div>
+                `).join('');
+            } else {
+                festivalsSection.style.display = 'none';
+            }
+        }
+    } catch (error) {
+        console.error('Error showing day Panchang:', error);
+    }
+}
+
+// Filter holidays by type
+function filterHolidays(filter) {
+    // Update active filter button
+    document.querySelectorAll('.holiday-filters .filter-chip').forEach(chip => {
+        chip.classList.toggle('active', chip.dataset.filter === filter);
+    });
+    
+    // Reload calendar with filter
+    if (typeof App !== 'undefined' && App.loadCalendar) {
+        App.loadCalendar(filter);
+    }
+}
+
+// Close day details panel
+function closeDayDetails() {
+    const panel = document.getElementById('dayDetails');
+    const overlay = document.getElementById('dayDetailsOverlay');
+
+    if (panel) panel.classList.remove('open');
+    if (overlay) overlay.classList.remove('open');
+
+    // Remove selection from calendar
+    document.querySelectorAll('.calendar-day.selected').forEach(el => {
+        el.classList.remove('selected');
+    });
+}
+
+// Make it globally available
+window.closeDayDetails = closeDayDetails;
+
+// Initialize calendar mode on page load
+document.addEventListener('DOMContentLoaded', function() {
+    const savedMode = localStorage.getItem('calendarMode') || 'simple';
+    
+    if (typeof IndianCalendar !== 'undefined') {
+        IndianCalendar.mode = savedMode;
+    }
+    
+    const toggle = document.getElementById('calendarModeToggle');
+    if (toggle) {
+        toggle.checked = savedMode === 'indian';
+    }
+});
+
+// ==================== CALENDAR - COMPLETE REWRITE ====================
+
+// Initialize calendar date
+if (!App.currentCalendarDate) {
+    App.currentCalendarDate = new Date();
+}
+
+// Load and render calendar
+App.loadCalendar = async function(filter = 'all') {
+    const grid = document.getElementById('calendarGrid');
+    if (!grid) {
+        console.error('Calendar grid not found');
+        return;
+    }
+
+    const year = this.currentCalendarDate.getFullYear();
+    const month = this.currentCalendarDate.getMonth();
+
+    // Update month display
+    const monthDisplay = document.getElementById('currentMonth');
+    if (monthDisplay) {
+        monthDisplay.textContent = new Date(year, month).toLocaleDateString('en-US', {
+            month: 'long',
+            year: 'numeric'
+        });
+    }
+
+    // Check if Indian mode
+    const isIndian = window.IndianCalendar && window.IndianCalendar.mode === 'indian';
+    console.log('Rendering calendar, Indian mode:', isIndian);
+
+    // Show/hide Indian elements
+    const indianBar = document.getElementById('indianCalendarBar');
+    const holidayFilters = document.getElementById('holidayFilters');
+    const calendarLegend = document.getElementById('calendarLegend');
+
+    if (indianBar) indianBar.style.display = isIndian ? 'block' : 'none';
+    if (holidayFilters) holidayFilters.style.display = isIndian ? 'flex' : 'none';
+    if (calendarLegend) calendarLegend.style.display = isIndian ? 'block' : 'none';
+
+    // Update Panchang bar
+    if (isIndian) {
+        this.updatePanchangBar();
+    }
+
+    // Get transactions
+    let transactions = [];
+    try {
+        const allTrans = await Storage.getTransactions();
+        transactions = Array.isArray(allTrans) ? allTrans : [];
+    } catch (e) {
+        console.error('Error loading transactions:', e);
+    }
+
+    // Calculate calendar
+    const firstDay = new Date(year, month, 1);
+    const lastDay = new Date(year, month + 1, 0);
+    const startDay = firstDay.getDay();
+    const totalDays = lastDay.getDate();
+    const prevMonthDays = new Date(year, month, 0).getDate();
+
+    const today = new Date();
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+
+    let html = '';
+
+    // Previous month days
+    for (let i = startDay - 1; i >= 0; i--) {
+        const day = prevMonthDays - i;
+        const date = new Date(year, month - 1, day);
+        html += this.renderDayCell(date, false, isIndian, transactions, todayStr);
+    }
+
+    // Current month days
+    for (let day = 1; day <= totalDays; day++) {
+        const date = new Date(year, month, day);
+        html += this.renderDayCell(date, true, isIndian, transactions, todayStr);
+    }
+
+    // Next month days
+    const cellsFilled = startDay + totalDays;
+    const remaining = 42 - cellsFilled;
+    for (let day = 1; day <= remaining; day++) {
+        const date = new Date(year, month + 1, day);
+        html += this.renderDayCell(date, false, isIndian, transactions, todayStr);
+    }
+
+    grid.innerHTML = html;
+    console.log('Calendar rendered with', 42, 'cells');
+};
+
+// Render a single day cell
+App.renderDayCell = function(date, isCurrentMonth, isIndian, transactions, todayStr) {
+    const dateStr = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+    const dayNum = date.getDate();
+    const dayOfWeek = date.getDay();
+    const isToday = dateStr === todayStr;
+    const isSunday = dayOfWeek === 0;
+    const isSaturday = dayOfWeek === 6;
+
+    // Transactions for this day
+    const dayTrans = transactions.filter(t => t.date === dateStr);
+    const hasTrans = dayTrans.length > 0;
+
+    // Get Panchang data
+    let panchang = null;
+    if (isIndian && isCurrentMonth && window.IndianCalendar) {
+        panchang = window.IndianCalendar.getPanchang(date);
+    }
+
+    // CSS classes
+    let cls = 'calendar-day';
+    if (!isCurrentMonth) cls += ' other-month';
+    if (isToday) cls += ' today';
+    if (isSunday) cls += ' sunday';
+    if (isSaturday) cls += ' saturday';
+    if (!isIndian) cls += ' simple-mode';
+
+    // Build HTML
+    let html = `<div class="${cls}" data-date="${dateStr}" onclick="App.selectCalendarDay('${dateStr}')">`;
+
+    // Row 1: Date + Tithi number
+    html += `<div class="date-row">`;
+    html += `<span class="date-number">${dayNum}</span>`;
+    if (panchang && panchang.tithi) {
+        html += `<span class="hindi-date">${panchang.tithi.num}</span>`;
+    }
+    html += `</div>`;
+
+    // Row 2: Tithi & Nakshatra (Indian mode only)
+    if (isIndian && isCurrentMonth && panchang) {
+        html += `<div class="panchang-mini">`;
+        if (panchang.tithi) {
+            html += `<div class="tithi-text">${panchang.tithi.name}</div>`;
+        }
+        if (panchang.nakshatra) {
+            html += `<div class="nakshatra-text">${panchang.nakshatra.symbol} ${panchang.nakshatra.name}</div>`;
+        }
+        html += `</div>`;
+
+        // Moon on special days
+        if (panchang.tithi.name === 'Purnima') {
+            html += `<span class="moon-mini">🌕</span>`;
+        } else if (panchang.tithi.name === 'Amavasya') {
+            html += `<span class="moon-mini">🌑</span>`;
+        }
+    }
+
+    // Transaction indicator
+    if (hasTrans && isCurrentMonth) {
+        html += `<span class="transaction-dot"></span>`;
+    }
+
+    html += `</div>`;
+    return html;
+};
+
+// Update Panchang bar
+App.updatePanchangBar = function() {
+    if (!window.IndianCalendar) return;
+
+    const today = new Date();
+    const panchang = window.IndianCalendar.getPanchang(today);
+
+    const monthEl = document.getElementById('currentHinduMonth');
+    const pakshaEl = document.getElementById('currentPaksha');
+    const moonEl = document.getElementById('currentMoonPhase');
+    const seasonEl = document.getElementById('currentSeason');
+
+    if (monthEl && panchang.hinduMonth) {
+        monthEl.textContent = `${panchang.hinduMonth.name} (${panchang.hinduMonth.nameHi})`;
+    }
+    if (pakshaEl && panchang.paksha) {
+        pakshaEl.textContent = panchang.paksha.nameHi;
+    }
+    if (moonEl && panchang.moonPhase) {
+        moonEl.textContent = `${panchang.moonPhase.emoji} ${panchang.moonPhase.name}`;
+    }
+    if (seasonEl && panchang.hinduMonth) {
+        seasonEl.textContent = panchang.hinduMonth.season;
+    }
+};
+
+// Select a day
+// ==================== SELECT CALENDAR DAY - COMPLETE FIX ====================
+// ==================== SELECT CALENDAR DAY - TIMEZONE FIXED ====================
+App.selectCalendarDay = async function(dateStr) {
+    console.log('Selected date:', dateStr);
+    
+    // Remove previous selection
+    document.querySelectorAll('.calendar-day.selected').forEach(el => {
+        el.classList.remove('selected');
+    });
+
+    // Add selection to clicked day
+    const dayEl = document.querySelector(`.calendar-day[data-date="${dateStr}"]`);
+    if (dayEl) {
+        dayEl.classList.add('selected');
+    }
+
+    // Get panel elements
+    const panel = document.getElementById('dayDetails');
+    const overlay = document.getElementById('dayDetailsOverlay');
+    
+    if (!panel) {
+        console.error('Day details panel not found!');
+        return;
+    }
+
+    // Open panel
+    panel.classList.add('open');
+    if (overlay) overlay.classList.add('open');
+
+    // ✅ FIX: Parse date correctly to avoid timezone issues
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(year, month - 1, day); // month is 0-indexed
+    
+    const isIndian = window.IndianCalendar && window.IndianCalendar.mode === 'indian';
+    
+    // Format date for title
+    const weekday = date.toLocaleDateString('en-IN', { weekday: 'long' });
+    const formattedDate = date.toLocaleDateString('en-IN', { 
+        day: 'numeric',
+        month: 'long', 
+        year: 'numeric' 
+    });
+
+    console.log('Parsed date:', date.toDateString()); // Debug log
+
+    // Build content HTML directly
+    let contentHTML = '';
+    
+    if (isIndian && window.IndianCalendar) {
+        // Get Panchang data
+        const panchang = window.IndianCalendar.getPanchang(date);
+        const dayOfWeek = date.getDay();
+        
+        // Rahu Kaal times
+        const rahuKaal = [
+            '4:30 PM - 6:00 PM',  // Sunday
+            '7:30 AM - 9:00 AM',  // Monday
+            '3:00 PM - 4:30 PM',  // Tuesday
+            '12:00 PM - 1:30 PM', // Wednesday
+            '1:30 PM - 3:00 PM',  // Thursday
+            '10:30 AM - 12:00 PM',// Friday
+            '9:00 AM - 10:30 AM'  // Saturday
+        ];
+
+        // Sunrise/Sunset by month
+        const monthIndex = date.getMonth();
+        const sunrise = ['6:50', '6:40', '6:20', '5:55', '5:30', '5:25', '5:35', '5:50', '6:05', '6:20', '6:40', '6:55'][monthIndex];
+        const sunset = ['5:40', '6:05', '6:25', '6:45', '7:05', '7:15', '7:10', '6:50', '6:20', '5:50', '5:25', '5:20'][monthIndex];
+
+        // Yoga calculation
+        const yogas = ['Vishkumbha', 'Priti', 'Ayushman', 'Saubhagya', 'Shobhana', 'Atiganda', 'Sukarma', 'Dhriti', 'Shula', 'Ganda', 'Vriddhi', 'Dhruva', 'Vyaghata', 'Harshana', 'Vajra', 'Siddhi', 'Vyatipata', 'Variyan', 'Parigha', 'Shiva', 'Siddha', 'Sadhya', 'Shubha', 'Shukla', 'Brahma', 'Indra', 'Vaidhriti'];
+        const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+        const yoga = yogas[(dayOfYear + date.getFullYear()) % 27];
+
+        // Karan calculation
+        const karans = ['Bava', 'Balava', 'Kaulava', 'Taitila', 'Garaja', 'Vanija', 'Vishti'];
+        const karan = karans[(dayOfYear * 2) % 7];
+
+        // Build guidance
+        let guidance = '';
+        if (panchang.tithi.name === 'Ekadashi') {
+            guidance += '<div style="background:#dcfce7;color:#166534;padding:8px 12px;border-radius:8px;margin-bottom:6px;">🙏 Ekadashi - Excellent for fasting</div>';
+        }
+        if (panchang.tithi.name === 'Purnima') {
+            guidance += '<div style="background:#dcfce7;color:#166534;padding:8px 12px;border-radius:8px;margin-bottom:6px;">✨ Purnima - Very auspicious day</div>';
+        }
+        if (panchang.tithi.name === 'Amavasya') {
+            guidance += '<div style="background:#fee2e2;color:#991b1b;padding:8px 12px;border-radius:8px;margin-bottom:6px;">⚠️ Amavasya - Avoid new beginnings</div>';
+        }
+        if (dayOfWeek === 2) {
+            guidance += '<div style="background:#dcfce7;color:#166534;padding:8px 12px;border-radius:8px;margin-bottom:6px;">🔱 Tuesday - Good for Hanuman worship</div>';
+        }
+        if (dayOfWeek === 4) {
+            guidance += '<div style="background:#dcfce7;color:#166534;padding:8px 12px;border-radius:8px;margin-bottom:6px;">🙏 Thursday - Good for Guru worship</div>';
+        }
+        if (dayOfWeek === 6) {
+            guidance += '<div style="background:#dcfce7;color:#166534;padding:8px 12px;border-radius:8px;margin-bottom:6px;">🪔 Saturday - Good for Shani worship</div>';
+        }
+        if (!guidance) {
+            guidance = '<div style="background:#dcfce7;color:#166534;padding:8px 12px;border-radius:8px;">✨ Good day for regular activities</div>';
+        }
+
+        contentHTML = `
+            <!-- Hindu Month -->
+            <div style="background:linear-gradient(135deg,#fef3c7,#fde68a);border-radius:12px;padding:15px;text-align:center;margin-bottom:15px;">
+                <div style="font-size:1.1rem;font-weight:700;color:#78350f;">
+                    ${panchang.hinduMonth.name} 
+                    <span style="color:#92400e;">(${panchang.hinduMonth.nameHi})</span>
+                </div>
+                <div style="font-size:0.8rem;color:#a16207;margin-top:4px;">${panchang.hinduMonth.season}</div>
+            </div>
+
+            <!-- Panchang -->
+            <div style="background:#f8fafc;border-radius:12px;padding:15px;margin-bottom:15px;">
+                <h4 style="margin:0 0 12px;font-size:0.9rem;color:#374151;">📅 Panchang</h4>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div style="background:white;padding:10px;border-radius:8px;">
+                        <div style="font-size:0.7rem;color:#64748b;">Tithi</div>
+                        <div style="font-weight:600;color:#1f2937;">${panchang.tithi.name}</div>
+                        <div style="font-size:0.75rem;color:#f97316;">${panchang.tithi.nameHi}</div>
+                    </div>
+                    <div style="background:white;padding:10px;border-radius:8px;">
+                        <div style="font-size:0.7rem;color:#64748b;">Nakshatra</div>
+                        <div style="font-weight:600;color:#1f2937;">${panchang.nakshatra.symbol} ${panchang.nakshatra.name}</div>
+                        <div style="font-size:0.75rem;color:#7c3aed;">${panchang.nakshatra.nameHi}</div>
+                    </div>
+                    <div style="background:white;padding:10px;border-radius:8px;">
+                        <div style="font-size:0.7rem;color:#64748b;">Yoga</div>
+                        <div style="font-weight:600;color:#1f2937;">🧘 ${yoga}</div>
+                    </div>
+                    <div style="background:white;padding:10px;border-radius:8px;">
+                        <div style="font-size:0.7rem;color:#64748b;">Karan</div>
+                        <div style="font-weight:600;color:#1f2937;">⚡ ${karan}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sun & Moon -->
+            <div style="background:#f8fafc;border-radius:12px;padding:15px;margin-bottom:15px;">
+                <h4 style="margin:0 0 12px;font-size:0.9rem;color:#374151;">🌅 Sun & Moon</h4>
+                <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+                    <div style="background:linear-gradient(135deg,#fef9c3,#fef08a);padding:12px;border-radius:8px;text-align:center;">
+                        <div style="font-size:1.3rem;">🌅</div>
+                        <div style="font-size:0.7rem;color:#64748b;">Sunrise</div>
+                        <div style="font-weight:600;">${sunrise} AM</div>
+                    </div>
+                    <div style="background:linear-gradient(135deg,#fed7aa,#fdba74);padding:12px;border-radius:8px;text-align:center;">
+                        <div style="font-size:1.3rem;">🌇</div>
+                        <div style="font-size:0.7rem;color:#64748b;">Sunset</div>
+                        <div style="font-weight:600;">${sunset} PM</div>
+                    </div>
+                    <div style="background:linear-gradient(135deg,#e0e7ff,#c7d2fe);padding:12px;border-radius:8px;text-align:center;">
+                        <div style="font-size:1.3rem;">${panchang.moonPhase.emoji}</div>
+                        <div style="font-size:0.7rem;color:#64748b;">Moon Phase</div>
+                        <div style="font-weight:600;">${panchang.moonPhase.name}</div>
+                    </div>
+                    <div style="background:linear-gradient(135deg,#f3e8ff,#e9d5ff);padding:12px;border-radius:8px;text-align:center;">
+                        <div style="font-size:1.3rem;">🌓</div>
+                        <div style="font-size:0.7rem;color:#64748b;">Paksha</div>
+                        <div style="font-weight:600;">${panchang.paksha.nameHi}</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Rahu Kaal -->
+            <div style="background:linear-gradient(135deg,#fee2e2,#fecaca);border-radius:12px;padding:15px;margin-bottom:15px;display:flex;align-items:center;gap:12px;">
+                <span style="font-size:1.5rem;">⛔</span>
+                <div>
+                    <div style="font-size:0.75rem;color:#991b1b;">Rahu Kaal - Avoid important work</div>
+                    <div style="font-size:1.1rem;font-weight:700;color:#dc2626;">${rahuKaal[dayOfWeek]}</div>
+                </div>
+            </div>
+
+            <!-- Guidance -->
+            <div style="background:#f8fafc;border-radius:12px;padding:15px;margin-bottom:15px;">
+                <h4 style="margin:0 0 12px;font-size:0.9rem;color:#374151;">✨ Guidance</h4>
+                ${guidance}
+            </div>
+        `;
+    }
+
+    // Add transactions section
+    let transHTML = '<p style="text-align:center;color:#94a3b8;padding:20px;">No transactions on this day</p>';
+    
+    try {
+        const transactions = await Storage.getTransactions();
+        const dayTrans = Array.isArray(transactions) ? transactions.filter(t => t.date === dateStr) : [];
+        
+        if (dayTrans.length > 0) {
+            let income = 0, expense = 0;
+            const items = dayTrans.map(t => {
+                if (t.type === 'income') income += parseFloat(t.amount);
+                else expense += parseFloat(t.amount);
+                return `
+                    <div style="display:flex;justify-content:space-between;align-items:center;padding:10px;background:#f8fafc;border-radius:8px;margin-bottom:6px;border-left:3px solid ${t.type === 'income' ? '#10b981' : '#ef4444'};">
+                        <div>
+                            <div style="font-weight:500;">${t.description || 'No description'}</div>
+                            <div style="font-size:0.75rem;color:#64748b;">${t.category || ''}</div>
+                        </div>
+                        <div style="font-weight:600;color:${t.type === 'income' ? '#10b981' : '#ef4444'};">
+                            ${t.type === 'income' ? '+' : '-'}${Utils.formatCurrency(t.amount)}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            transHTML = `
+                <div style="display:flex;gap:10px;margin-bottom:12px;">
+                    <div style="flex:1;background:#dcfce7;padding:10px;border-radius:8px;text-align:center;">
+                        <div style="font-size:0.7rem;color:#64748b;">Income</div>
+                        <div style="font-weight:700;color:#10b981;">+${Utils.formatCurrency(income)}</div>
+                    </div>
+                    <div style="flex:1;background:#fee2e2;padding:10px;border-radius:8px;text-align:center;">
+                        <div style="font-size:0.7rem;color:#64748b;">Expense</div>
+                        <div style="font-weight:700;color:#ef4444;">-${Utils.formatCurrency(expense)}</div>
+                    </div>
+                </div>
+                ${items}
+            `;
+        }
+    } catch (e) {
+        console.error('Error loading transactions:', e);
+    }
+
+    contentHTML += `
+        <div style="background:#f8fafc;border-radius:12px;padding:15px;">
+            <h4 style="margin:0 0 12px;font-size:0.9rem;color:#374151;">💰 Transactions</h4>
+            ${transHTML}
+        </div>
+    `;
+
+    // Set panel content
+    panel.innerHTML = `
+        <div style="position:sticky;top:0;background:linear-gradient(135deg,#667eea,#764ba2);color:white;padding:20px;display:flex;justify-content:space-between;align-items:center;z-index:10;">
+            <div>
+                <div style="font-weight:600;font-size:1.1rem;">${weekday}</div>
+                <div style="font-size:0.9rem;opacity:0.9;">${formattedDate}</div>
+            </div>
+            <button onclick="closeDayDetails()" style="width:36px;height:36px;border-radius:50%;background:rgba(255,255,255,0.2);border:none;color:white;cursor:pointer;font-size:1.2rem;">✕</button>
+        </div>
+        <div style="padding:15px;">
+            ${contentHTML}
+        </div>
+    `;
+
+    console.log('Sidebar loaded for:', date.toDateString());
+};
+
+// Close sidebar
+function closeDayDetails() {
+    const panel = document.getElementById('dayDetails');
+    const overlay = document.getElementById('dayDetailsOverlay');
+    
+    if (panel) panel.classList.remove('open');
+    if (overlay) overlay.classList.remove('open');
+    
+    document.querySelectorAll('.calendar-day.selected').forEach(el => {
+        el.classList.remove('selected');
+    });
+}
+
+// Make globally available
+window.closeDayDetails = closeDayDetails;
+
+// Initialize calendar events
+App.initCalendar = function() {
+    // Month navigation
+    const prevBtn = document.getElementById('prevMonth');
+    const nextBtn = document.getElementById('nextMonth');
+
+    if (prevBtn) {
+        prevBtn.onclick = () => {
+            this.currentCalendarDate.setMonth(this.currentCalendarDate.getMonth() - 1);
+            this.loadCalendar();
+        };
+    }
+
+    if (nextBtn) {
+        nextBtn.onclick = () => {
+            this.currentCalendarDate.setMonth(this.currentCalendarDate.getMonth() + 1);
+            this.loadCalendar();
+        };
+    }
+
+    // Mode toggle
+    const toggle = document.getElementById('calendarModeToggle');
+    if (toggle) {
+        // Set initial state
+        toggle.checked = window.IndianCalendar?.mode === 'indian';
+
+        toggle.onchange = () => {
+            const mode = toggle.checked ? 'indian' : 'simple';
+            if (window.IndianCalendar) {
+                window.IndianCalendar.setMode(mode);
+            }
+            this.loadCalendar();
+        };
+    }
+};
+
+// ==================== LOAD COMPLETE DAY DETAILS ====================
+async function loadDayDetails(dateStr) {
+    const date = new Date(dateStr);
+    const isIndian = window.IndianCalendar && window.IndianCalendar.mode === 'indian';
+
+    // Update title with formatted date
+    const titleEl = document.getElementById('selectedDateTitle');
+    if (titleEl) {
+        const weekday = date.toLocaleDateString('en-US', { weekday: 'long' });
+        const formattedDate = date.toLocaleDateString('en-US', { 
+            day: 'numeric',
+            month: 'long', 
+            year: 'numeric' 
+        });
+        titleEl.innerHTML = `<div>${weekday}</div><div style="font-size: 0.85rem; color: #64748b;">${formattedDate}</div>`;
+    }
+
+    // Show correct view based on mode
+    const simpleContent = document.getElementById('simpleViewContent');
+    const indianContent = document.getElementById('indianViewContent');
+
+    if (simpleContent) simpleContent.style.display = isIndian ? 'none' : 'block';
+    if (indianContent) indianContent.style.display = isIndian ? 'block' : 'none';
+
+    // Load Panchang details for Indian mode
+    if (isIndian && window.IndianCalendar) {
+        const panchang = window.IndianCalendar.getPanchang(date);
+
+        // Tithi
+        const tithiEl = document.getElementById('panchangTithi');
+        if (tithiEl && panchang.tithi) {
+            tithiEl.innerHTML = `
+                <strong>${panchang.tithi.name}</strong>
+                <span style="color: #f97316; font-size: 0.8rem;"> (${panchang.tithi.nameHi})</span>
+            `;
+        }
+
+        // Nakshatra
+        const nakshatraEl = document.getElementById('panchangNakshatra');
+        const nakshatraSymbol = document.getElementById('nakshatraSymbol');
+        if (nakshatraEl && panchang.nakshatra) {
+            nakshatraEl.innerHTML = `
+                <strong>${panchang.nakshatra.name}</strong>
+                <span style="color: #7c3aed; font-size: 0.8rem;"> (${panchang.nakshatra.nameHi})</span>
+            `;
+        }
+        if (nakshatraSymbol && panchang.nakshatra) {
+            nakshatraSymbol.textContent = panchang.nakshatra.symbol || '⭐';
+        }
+
+        // Yoga
+        const yogaEl = document.getElementById('panchangYoga');
+        if (yogaEl) {
+            const yogas = ['Vishkumbha', 'Priti', 'Ayushman', 'Saubhagya', 'Shobhana', 'Atiganda', 'Sukarma', 'Dhriti', 'Shula', 'Ganda', 'Vriddhi', 'Dhruva', 'Vyaghata', 'Harshana', 'Vajra', 'Siddhi', 'Vyatipata', 'Variyan', 'Parigha', 'Shiva', 'Siddha', 'Sadhya', 'Shubha', 'Shukla', 'Brahma', 'Indra', 'Vaidhriti'];
+            const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+            const yogaIndex = (dayOfYear + date.getFullYear()) % 27;
+            yogaEl.textContent = yogas[yogaIndex] || 'Shubha';
+        }
+
+        // Karan
+        const karanEl = document.getElementById('panchangKaran');
+        if (karanEl) {
+            const karans = ['Bava', 'Balava', 'Kaulava', 'Taitila', 'Garaja', 'Vanija', 'Vishti', 'Shakuni', 'Chatushpada', 'Naga', 'Kintughna'];
+            const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+            const karanIndex = (dayOfYear * 2) % 11;
+            karanEl.textContent = karans[karanIndex] || 'Bava';
+        }
+
+        // Moon Phase
+        const moonPhaseEl = document.getElementById('panchangMoonPhase');
+        const moonIconEl = document.getElementById('moonPhaseIcon');
+        if (moonPhaseEl && panchang.moonPhase) {
+            moonPhaseEl.textContent = panchang.moonPhase.name;
+        }
+        if (moonIconEl && panchang.moonPhase) {
+            moonIconEl.textContent = panchang.moonPhase.emoji;
+        }
+
+        // Paksha
+        const pakshaEl = document.getElementById('panchangPaksha');
+        if (pakshaEl && panchang.paksha) {
+            pakshaEl.innerHTML = `${panchang.paksha.name} <span style="color: #7c3aed;">(${panchang.paksha.nameHi})</span>`;
+        }
+
+        // Sunrise & Sunset (approximate based on month)
+        const sunriseEl = document.getElementById('panchangSunrise');
+        const sunsetEl = document.getElementById('panchangSunset');
+        const month = date.getMonth();
+        const sunriseData = ['6:50 AM', '6:40 AM', '6:20 AM', '5:55 AM', '5:30 AM', '5:25 AM', '5:35 AM', '5:50 AM', '6:05 AM', '6:20 AM', '6:40 AM', '6:55 AM'];
+        const sunsetData = ['5:40 PM', '6:05 PM', '6:25 PM', '6:45 PM', '7:05 PM', '7:15 PM', '7:10 PM', '6:50 PM', '6:20 PM', '5:50 PM', '5:25 PM', '5:20 PM'];
+        if (sunriseEl) sunriseEl.textContent = sunriseData[month];
+        if (sunsetEl) sunsetEl.textContent = sunsetData[month];
+
+        // Rahu Kaal
+        const rahuKaalEl = document.getElementById('panchangRahuKaal');
+        const dayOfWeek = date.getDay();
+        const rahuKaal = [
+            '4:30 PM - 6:00 PM',  // Sunday
+            '7:30 AM - 9:00 AM',  // Monday
+            '3:00 PM - 4:30 PM',  // Tuesday
+            '12:00 PM - 1:30 PM', // Wednesday
+            '1:30 PM - 3:00 PM',  // Thursday
+            '10:30 AM - 12:00 PM',// Friday
+            '9:00 AM - 10:30 AM'  // Saturday
+        ];
+        if (rahuKaalEl) rahuKaalEl.textContent = rahuKaal[dayOfWeek];
+
+        // Auspicious/Inauspicious guidance
+        const guidanceEl = document.getElementById('panchangGuidance');
+        if (guidanceEl) {
+            let guidance = '';
+            
+            // Ekadashi
+            if (panchang.tithi.name === 'Ekadashi') {
+                guidance += '<div class="guidance-item auspicious">🙏 Ekadashi - Excellent for fasting & prayers</div>';
+            }
+            // Purnima
+            if (panchang.tithi.name === 'Purnima') {
+                guidance += '<div class="guidance-item auspicious">✨ Purnima - Very auspicious day</div>';
+            }
+            // Amavasya
+            if (panchang.tithi.name === 'Amavasya') {
+                guidance += '<div class="guidance-item inauspicious">⚠️ Amavasya - Avoid new beginnings</div>';
+                guidance += '<div class="guidance-item auspicious">🙏 Good for Pitru Tarpan</div>';
+            }
+            // Tuesday
+            if (dayOfWeek === 2) {
+                guidance += '<div class="guidance-item auspicious">🔱 Tuesday - Good for Hanuman worship</div>';
+            }
+            // Saturday
+            if (dayOfWeek === 6) {
+                guidance += '<div class="guidance-item auspicious">🪔 Saturday - Good for Shani worship</div>';
+            }
+            // Thursday
+            if (dayOfWeek === 4) {
+                guidance += '<div class="guidance-item auspicious">🙏 Thursday - Good for Guru worship</div>';
+            }
+            
+            if (!guidance) {
+                guidance = '<div class="guidance-item auspicious">✨ Good day for regular activities</div>';
+            }
+            
+            guidanceEl.innerHTML = guidance;
+        }
+
+        // Hindu Month Info
+        const hinduMonthEl = document.getElementById('panchangHinduMonth');
+        if (hinduMonthEl && panchang.hinduMonth) {
+            hinduMonthEl.innerHTML = `
+                <strong>${panchang.hinduMonth.name}</strong> 
+                <span style="color: #f97316;">(${panchang.hinduMonth.nameHi})</span>
+                <br><small style="color: #64748b;">${panchang.hinduMonth.season}</small>
+            `;
+        }
+    }
+
+    // Load transactions for this day
+    try {
+        const transactions = await Storage.getTransactions();
+        const dayTrans = Array.isArray(transactions) 
+            ? transactions.filter(t => t.date === dateStr) 
+            : [];
+
+        const containerId = isIndian ? 'indianDayTransactions' : 'dayTransactions';
+        const container = document.getElementById(containerId);
+
+        if (container) {
+            if (dayTrans.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <span class="empty-icon">📝</span>
+                        <p>No transactions on this day</p>
+                        <button class="add-transaction-btn" onclick="App.openTransactionModal()">
+                            + Add Transaction
+                        </button>
+                    </div>
+                `;
+            } else {
+                let totalIncome = 0;
+                let totalExpense = 0;
+                
+                const transHTML = dayTrans.map(t => {
+                    if (t.type === 'income') totalIncome += parseFloat(t.amount);
+                    else totalExpense += parseFloat(t.amount);
+                    
+                    return `
+                        <div class="transaction-item ${t.type}">
+                            <div class="trans-left">
+                                <span class="trans-icon">${t.type === 'income' ? '💰' : '💸'}</span>
+                                <div class="trans-info">
+                                    <span class="trans-desc">${t.description || 'No description'}</span>
+                                    <span class="trans-cat">${t.category || 'Uncategorized'}</span>
+                                </div>
+                            </div>
+                            <span class="trans-amount ${t.type}">
+                                ${t.type === 'income' ? '+' : '-'}${Utils.formatCurrency(t.amount)}
+                            </span>
+                        </div>
+                    `;
+                }).join('');
+
+                container.innerHTML = `
+                    <div class="day-summary">
+                        <div class="summary-item income">
+                            <span class="label">Income</span>
+                            <span class="value">+${Utils.formatCurrency(totalIncome)}</span>
+                        </div>
+                        <div class="summary-item expense">
+                            <span class="label">Expense</span>
+                            <span class="value">-${Utils.formatCurrency(totalExpense)}</span>
+                        </div>
+                    </div>
+                    <div class="transactions-list">
+                        ${transHTML}
+                    </div>
+                `;
+            }
+        }
+    } catch (e) {
+        console.error('Error loading day transactions:', e);
+    }
+}
+
+// Make it globally available
+window.loadDayDetails = loadDayDetails;
+
+// ==================== DATE HELPER - TIMEZONE FIX ====================
+function formatDateString(date) {
+    // Format date as YYYY-MM-DD in LOCAL timezone (not UTC)
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+}
+
+function parseDateString(dateStr) {
+    // Parse YYYY-MM-DD string to local Date object
+    const [year, month, day] = dateStr.split('-').map(Number);
+    return new Date(year, month - 1, day, 12, 0, 0); // Noon to avoid edge cases
 }
