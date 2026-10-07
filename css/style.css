@@ -6397,3 +6397,709 @@ body {
         right: -100%;
     }
 }
+
+/* ==================== BORROW CARDS - PARTIAL PAYMENT STYLES ==================== */
+
+/* Status Badge */
+.borrow-status-badge {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    padding: 4px 10px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.borrow-status-badge.pending {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.borrow-status-badge.partially-paid {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.borrow-status-badge.fully-paid {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+/* Borrow Card */
+.borrow-card {
+    position: relative;
+    background: white;
+    border-radius: 12px;
+    padding: 15px;
+    margin-bottom: 15px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border-left: 4px solid #64748b;
+    transition: all 0.3s;
+}
+
+.borrow-card.given {
+    border-left-color: #10b981;
+}
+
+.borrow-card.taken {
+    border-left-color: #f59e0b;
+}
+
+.borrow-card.partially-paid {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+}
+
+.borrow-card.fully-paid {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    opacity: 0.8;
+}
+
+.borrow-card.overdue {
+    border-left-color: #ef4444;
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+/* Header */
+.borrow-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+}
+
+.borrow-person {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.person-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1.1rem;
+}
+
+.person-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.person-name {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 1rem;
+}
+
+.borrow-type-label {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.borrow-actions {
+    display: flex;
+    gap: 5px;
+}
+
+.btn-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    background: #f1f5f9;
+    color: #64748b;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.btn-icon:hover {
+    background: #e2e8f0;
+}
+
+.btn-icon.btn-payment {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.btn-icon.btn-payment:hover {
+    background: #bfdbfe;
+}
+
+.btn-icon.btn-delete:hover {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+/* Amount Section */
+.borrow-amount-section {
+    background: #f8fafc;
+    border-radius: 10px;
+    padding: 12px;
+    margin-bottom: 15px;
+}
+
+.amount-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 6px 0;
+}
+
+.amount-row:not(:last-child) {
+    border-bottom: 1px dashed #e2e8f0;
+}
+
+.amount-label {
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.amount-value {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.amount-value.total {
+    color: #1f2937;
+}
+
+.amount-value.paid-amount {
+    color: #10b981;
+}
+
+.amount-row.remaining.highlight {
+    background: #fef3c7;
+    margin: 8px -12px -12px;
+    padding: 10px 12px;
+    border-radius: 0 0 10px 10px;
+}
+
+.amount-row.remaining.highlight .amount-label {
+    font-weight: 600;
+    color: #d97706;
+}
+
+.amount-row.remaining.highlight .remaining-amount {
+    font-size: 1.1rem;
+    color: #d97706;
+}
+
+.amount-row.remaining.zero .remaining-amount {
+    color: #10b981;
+}
+
+/* Progress Bar */
+.payment-progress {
+    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.progress-bar {
+    flex: 1;
+    height: 8px;
+    background: #e2e8f0;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+    border-radius: 4px;
+    transition: width 0.5s ease;
+}
+
+.progress-fill.complete {
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+}
+
+.progress-text {
+    font-size: 0.75rem;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+/* Details */
+.borrow-details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.detail-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.8rem;
+    color: #64748b;
+    background: #f1f5f9;
+    padding: 5px 10px;
+    border-radius: 6px;
+}
+
+.detail-item i {
+    font-size: 0.75rem;
+}
+
+.detail-item.overdue-text {
+    background: #fee2e2;
+    color: #dc2626;
+}
+
+/* Payment History */
+.payment-history {
+    margin-top: 15px;
+    border-top: 1px solid #e2e8f0;
+    padding-top: 10px;
+}
+
+.history-toggle {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 8px;
+    border-radius: 8px;
+    transition: background 0.2s;
+}
+
+.history-toggle:hover {
+    background: #f1f5f9;
+}
+
+.history-toggle span {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.85rem;
+    color: #64748b;
+}
+
+.history-list {
+    margin-top: 10px;
+}
+
+.history-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 10px;
+    background: #f8fafc;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    font-size: 0.85rem;
+}
+
+.history-date {
+    color: #64748b;
+    min-width: 60px;
+}
+
+.history-amount {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.history-note {
+    color: #94a3b8;
+    font-size: 0.8rem;
+    flex: 1;
+    text-align: right;
+}
+
+/* Dark Mode */
+[data-theme="dark"] .borrow-card {
+    background: #334155;
+}
+
+[data-theme="dark"] .borrow-card.partially-paid {
+    background: linear-gradient(135deg, #1e3a5f 0%, #1e40af20 100%);
+}
+
+[data-theme="dark"] .borrow-card.fully-paid {
+    background: linear-gradient(135deg, #14532d40 0%, #16a34a20 100%);
+}
+
+[data-theme="dark"] .person-name {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .borrow-amount-section {
+    background: #475569;
+}
+
+[data-theme="dark"] .amount-value.total {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .amount-row.remaining.highlight {
+    background: #78350f;
+}
+
+[data-theme="dark"] .detail-item {
+    background: #475569;
+    color: #94a3b8;
+}
+
+/* Modal Small */
+.modal-sm .modal-content {
+    max-width: 400px;
+}
+
+/* ==================== BORROW CARD - IMPROVED STYLES ==================== */
+
+/* Borrow Item Base */
+.borrow-item {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 15px;
+    background: white;
+    border-radius: 12px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    border-left: 4px solid #64748b;
+    transition: all 0.3s;
+}
+
+.borrow-item.given {
+    border-left-color: #10b981;
+}
+
+.borrow-item.taken {
+    border-left-color: #f59e0b;
+}
+
+/* Partial Paid - Highlighted Background */
+.borrow-item.partial-paid {
+    background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+    border-left-color: #3b82f6;
+}
+
+/* Completed */
+.borrow-item.completed {
+    background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
+    border-left-color: #10b981;
+    opacity: 0.85;
+}
+
+/* Overdue */
+.borrow-item.overdue {
+    background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+    border-left-color: #ef4444;
+}
+
+/* Status Tag - Top Right */
+.borrow-status-tag {
+    position: absolute;
+    top: -8px;
+    right: 15px;
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+}
+
+.borrow-status-tag.pending {
+    background: #fef3c7;
+    color: #d97706;
+}
+
+.borrow-status-tag.partial {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.borrow-status-tag.completed {
+    background: #dcfce7;
+    color: #16a34a;
+}
+
+/* Avatar */
+.borrow-avatar {
+    width: 45px;
+    height: 45px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+    flex-shrink: 0;
+}
+
+/* Details */
+.borrow-details {
+    flex: 1;
+    min-width: 0;
+}
+
+.borrow-details h4 {
+    margin: 0 0 5px;
+    font-size: 1rem;
+    color: #1f2937;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.overdue-badge {
+    background: #ef4444;
+    color: white;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-size: 0.65rem;
+    font-weight: 600;
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+.borrow-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.borrow-meta span {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+/* Progress Bar */
+.borrow-progress {
+    margin-top: 8px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.borrow-progress .progress-bar {
+    flex: 1;
+    height: 6px;
+    background: #e2e8f0;
+    border-radius: 3px;
+    overflow: hidden;
+}
+
+.borrow-progress .progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6 0%, #2563eb 100%);
+    border-radius: 3px;
+    transition: width 0.5s ease;
+}
+
+.borrow-progress .progress-fill.complete {
+    background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+}
+
+.borrow-progress .progress-text {
+    font-size: 0.7rem;
+    color: #64748b;
+    white-space: nowrap;
+}
+
+/* Amount Section */
+.borrow-amount-section {
+    text-align: right;
+    min-width: 100px;
+}
+
+.amount-total {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: #1f2937;
+}
+
+.amount-total.strikethrough {
+    text-decoration: line-through;
+    color: #94a3b8;
+    font-size: 0.9rem;
+}
+
+.amount-paid {
+    font-size: 0.75rem;
+    color: #10b981;
+    margin-top: 2px;
+}
+
+.amount-paid .paid-label {
+    color: #64748b;
+}
+
+.amount-paid .paid-value {
+    font-weight: 600;
+}
+
+/* Remaining Amount - HIGHLIGHTED */
+.amount-remaining {
+    margin-top: 4px;
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 0.85rem;
+}
+
+.amount-remaining.highlight {
+    background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+    animation: highlightPulse 2s infinite;
+}
+
+@keyframes highlightPulse {
+
+    0%,
+    100% {
+        box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+    }
+
+    50% {
+        box-shadow: 0 0 0 6px rgba(245, 158, 11, 0);
+    }
+}
+
+.amount-remaining .remaining-label {
+    color: #92400e;
+    font-size: 0.7rem;
+}
+
+.amount-remaining .remaining-value {
+    font-weight: 700;
+    color: #d97706;
+    font-size: 0.95rem;
+}
+
+/* Action Buttons */
+.borrow-actions-btns {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.borrow-action-btn {
+    width: 32px;
+    height: 32px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.borrow-action-btn.payment {
+    background: #dbeafe;
+    color: #2563eb;
+}
+
+.borrow-action-btn.payment:hover {
+    background: #3b82f6;
+    color: white;
+    transform: scale(1.1);
+}
+
+.borrow-action-btn.edit {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.borrow-action-btn.edit:hover {
+    background: #e2e8f0;
+    color: #475569;
+}
+
+.borrow-action-btn.delete {
+    background: #f1f5f9;
+    color: #64748b;
+}
+
+.borrow-action-btn.delete:hover {
+    background: #fee2e2;
+    color: #ef4444;
+}
+
+/* Dark Mode */
+[data-theme="dark"] .borrow-item {
+    background: #334155;
+}
+
+[data-theme="dark"] .borrow-item.partial-paid {
+    background: linear-gradient(135deg, #1e3a5f 0%, #1e40af30 100%);
+}
+
+[data-theme="dark"] .borrow-item.completed {
+    background: linear-gradient(135deg, #14532d40 0%, #16a34a20 100%);
+}
+
+[data-theme="dark"] .borrow-details h4 {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .amount-total {
+    color: #f1f5f9;
+}
+
+[data-theme="dark"] .amount-remaining.highlight {
+    background: linear-gradient(135deg, #78350f 0%, #92400e 100%);
+}
+
+[data-theme="dark"] .amount-remaining .remaining-label {
+    color: #fde68a;
+}
+
+[data-theme="dark"] .amount-remaining .remaining-value {
+    color: #fbbf24;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .borrow-item {
+        flex-wrap: wrap;
+    }
+
+    .borrow-amount-section {
+        width: 100%;
+        text-align: left;
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px dashed #e2e8f0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+
+    .borrow-actions-btns {
+        flex-direction: row;
+        position: absolute;
+        top: 10px;
+        right: 10px;
+    }
+}

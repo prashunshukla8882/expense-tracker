@@ -1,4 +1,12 @@
 // ==================== APP.JS - COMPLETE EXPENSE TRACKER APPLICATION ====================
+// Global date helper function
+function toLocalDateString(date) {
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, '0');
+    const d = String(date.getDate()).padStart(2, '0');
+    return `${y}-${m}-${d}`;
+}
+
 
 const App = {
     
@@ -504,7 +512,113 @@ async updateCurrencySymbols() {
             console.error('Error saving transaction:', error);
             Utils.showToast('Failed to save transaction', 'error');
         }
-    },
+  },
+    
+    // Save partial payment
+// Save partial payment
+async savePayment() {
+    try {
+        const borrowId = document.getElementById('paymentBorrowId')?.value;
+        const amount = parseFloat(document.getElementById('paymentAmount')?.value) || 0;
+        const date = document.getElementById('paymentDate')?.value;
+        const note = document.getElementById('paymentNote')?.value || '';
+
+        // Validation
+        if (!borrowId) {
+            Utils.showToast('Error: No borrow record selected', 'error');
+            return;
+        }
+
+        if (amount <= 0) {
+            Utils.showToast('Please enter a valid amount', 'error');
+            return;
+        }
+
+        // Get borrows from storage
+        const borrows = await Storage.getBorrows() || [];
+        const borrowIndex = borrows.findIndex(b => b.id === borrowId);
+
+        if (borrowIndex === -1) {
+            Utils.showToast('Borrow record not found', 'error');
+            return;
+        }
+
+        const borrow = borrows[borrowIndex];
+        const totalAmount = parseFloat(borrow.amount) || 0;
+        const currentPaid = parseFloat(borrow.paidAmount) || 0;
+        const remaining = totalAmount - currentPaid;
+
+        // Check if payment exceeds remaining
+        if (amount > remaining) {
+            Utils.showToast(`Payment cannot exceed ₹${remaining.toLocaleString('en-IN')}`, 'error');
+            return;
+        }
+
+        // Initialize payments array if not exists
+        if (!borrow.payments) {
+            borrow.payments = [];
+        }
+
+        // Add payment record
+        borrow.payments.push({
+            id: Date.now().toString(),
+            amount: amount,
+            date: date || new Date().toISOString().split('T')[0],
+            note: note
+        });
+
+        // Update paid amount
+        borrow.paidAmount = currentPaid + amount;
+
+        // Update status based on payment
+        const newRemaining = totalAmount - borrow.paidAmount;
+        if (newRemaining <= 0) {
+            borrow.status = 'completed';
+        } else if (borrow.paidAmount > 0) {
+            borrow.status = 'partial';
+        }
+
+        // Save back to storage
+        borrows[borrowIndex] = borrow;
+        await Storage.saveBorrows(borrows);
+
+        // Close modal
+        this.closePaymentModal();
+
+        // Refresh the borrow page
+        await this.loadBorrowPage();
+
+        // Show success message
+        if (newRemaining <= 0) {
+            Utils.showToast(`🎉 Fully paid! Payment of ₹${amount.toLocaleString('en-IN')} recorded.`, 'success');
+        } else {
+            Utils.showToast(`✅ Payment recorded! Remaining: ₹${newRemaining.toLocaleString('en-IN')}`, 'success');
+        }
+
+    } catch (error) {
+        console.error('Error saving payment:', error);
+        Utils.showToast('Failed to save payment', 'error');
+    }
+},
+
+// Close payment modal
+closePaymentModal() {
+    const modal = document.getElementById('paymentModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+    // Clear form
+    const form = document.getElementById('paymentForm');
+    if (form) form.reset();
+},
+
+// Close payment modal
+closePaymentModal() {
+    const modal = document.getElementById('paymentModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+},
 
     async checkBudgetAlerts(category, amount) {
         try {
@@ -2758,85 +2872,126 @@ async showSimpleDayDetails(dateStr) {
     },
 
     renderBorrowList(containerId, items, type) {
-        const container = document.getElementById(containerId);
-        if (!container) return;
+    const container = document.getElementById(containerId);
+    if (!container) return;
 
-        const today = new Date().toISOString().split("T")[0];
+    const now = new Date();
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 
-        if (!Array.isArray(items) || items.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="fas fa-hand-holding-usd"></i>
-                    <p>No ${type === "given" ? "money given" : "money taken"} records</p>
-                    <button class="add-btn small" onclick="App.openBorrowModal('${type}')">
-                        <i class="fas fa-plus"></i> Add Record
-                    </button>
+    if (!Array.isArray(items) || items.length === 0) {
+        container.innerHTML = `
+            <div class="empty-state">
+                <i class="fas fa-hand-holding-usd"></i>
+                <p>No ${type === "given" ? "money given" : "money taken"} records</p>
+                <button class="add-btn small" onclick="App.openBorrowModal('${type}')">
+                    <i class="fas fa-plus"></i> Add Record
+                </button>
+            </div>
+        `;
+        return;
+    }
+
+    container.innerHTML = items
+        .map((item, index) => {
+            const totalAmount = parseFloat(item.amount) || 0;
+            const paidAmount = parseFloat(item.paidAmount) || 0;
+            const remaining = totalAmount - paidAmount;
+            const progress = totalAmount > 0 ? (paidAmount / totalAmount) * 100 : 0;
+            
+            // Status calculation
+            const isFullyPaid = remaining <= 0;
+            const isPartiallyPaid = paidAmount > 0 && !isFullyPaid;
+            const isOverdue = item.dueDate && item.dueDate < today && !isFullyPaid;
+            
+            // Auto-update status based on payment
+            let displayStatus = item.status;
+            if (isFullyPaid) displayStatus = 'completed';
+            else if (isPartiallyPaid) displayStatus = 'partial';
+            else displayStatus = 'pending';
+            
+            const initials = item.person
+                .split(" ")
+                .map((n) => n[0])
+                .join("")
+                .toUpperCase()
+                .slice(0, 2);
+
+            return `
+                <div class="borrow-item ${item.type} ${isOverdue ? "overdue" : ""} ${isFullyPaid ? "completed" : ""} ${isPartiallyPaid ? "partial-paid" : ""}" 
+                     style="animation-delay: ${index * 0.1}s">
+                    
+                    <!-- Status Badge - Top Right -->
+                    <div class="borrow-status-tag ${displayStatus}">
+                        ${isFullyPaid ? '✅ Paid' : isPartiallyPaid ? `⏳ ${progress.toFixed(0)}% Paid` : '⏳ Pending'}
+                    </div>
+                    
+                    <div class="borrow-avatar">${initials}</div>
+                    
+                    <div class="borrow-details">
+                        <h4>
+                            ${item.person}
+                            ${isOverdue ? '<span class="overdue-badge">Overdue!</span>' : ""}
+                        </h4>
+                        <div class="borrow-meta">
+                            <span><i class="fas fa-calendar"></i> ${Utils.formatDate(item.date)}</span>
+                            ${item.dueDate ? `<span><i class="fas fa-clock"></i> Due: ${Utils.formatDate(item.dueDate)}</span>` : ""}
+                            ${item.reason ? `<span><i class="fas fa-tag"></i> ${item.reason}</span>` : ""}
+                        </div>
+                        
+                        <!-- Progress Bar - Always show if partial -->
+                        ${paidAmount > 0 ? `
+                            <div class="borrow-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill ${isFullyPaid ? 'complete' : ''}" style="width: ${Math.min(progress, 100)}%"></div>
+                                </div>
+                                <span class="progress-text">${progress.toFixed(0)}% paid</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <!-- Amount Section - Improved -->
+                    <div class="borrow-amount-section">
+                        <!-- Total Amount -->
+                        <div class="amount-total ${isFullyPaid ? 'strikethrough' : ''}">
+                            ${Utils.formatCurrency(totalAmount)}
+                        </div>
+                        
+                        <!-- Paid Amount -->
+                        ${paidAmount > 0 ? `
+                            <div class="amount-paid">
+                                <span class="paid-label">Paid:</span>
+                                <span class="paid-value">₹${paidAmount.toLocaleString('en-IN')}</span>
+                            </div>
+                        ` : ''}
+                        
+                        <!-- Remaining Amount - Highlighted -->
+                        ${!isFullyPaid ? `
+                            <div class="amount-remaining ${isPartiallyPaid ? 'highlight' : ''}">
+                                <span class="remaining-label">Due:</span>
+                                <span class="remaining-value">₹${remaining.toLocaleString('en-IN')}</span>
+                            </div>
+                        ` : ''}
+                    </div>
+                    
+                    <!-- Action Buttons -->
+                    <div class="borrow-actions-btns">
+                        ${!isFullyPaid ? `
+                            <button class="borrow-action-btn payment" onclick="App.openPaymentModal('${item.id}')" title="Record Payment">
+                                <i class="fas fa-plus-circle"></i>
+                            </button>
+                        ` : ''}
+                        <button class="borrow-action-btn edit" onclick="App.openBorrowModal('${item.type}', '${item.id}')" title="Edit">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="borrow-action-btn delete" onclick="App.deleteBorrowRecord('${item.id}')" title="Delete">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>
                 </div>
             `;
-            return;
-        }
-
-        container.innerHTML = items
-            .map((item, index) => {
-                const isOverdue = item.dueDate && item.dueDate < today && item.status !== "completed";
-                const remaining = parseFloat(item.amount) - (parseFloat(item.paidAmount) || 0);
-                const progress = ((parseFloat(item.paidAmount) || 0) / parseFloat(item.amount)) * 100;
-                const initials = item.person
-                    .split(" ")
-                    .map((n) => n[0])
-                    .join("")
-                    .toUpperCase()
-                    .slice(0, 2);
-
-                return `
-                    <div class="borrow-item ${item.type} ${isOverdue ? "overdue" : ""} ${item.status === "completed" ? "completed" : ""}" 
-                         style="animation-delay: ${index * 0.1}s">
-                        <div class="borrow-avatar">${initials}</div>
-                        <div class="borrow-details">
-                            <h4>
-                                ${item.person}
-                                ${isOverdue ? '<span class="overdue-badge">Overdue!</span>' : ""}
-                            </h4>
-                            <div class="borrow-meta">
-                                <span><i class="fas fa-calendar"></i> ${Utils.formatDate(item.date)}</span>
-                                ${item.dueDate ? `<span><i class="fas fa-clock"></i> Due: ${Utils.formatDate(item.dueDate)}</span>` : ""}
-                                ${item.reason ? `<span><i class="fas fa-tag"></i> ${item.reason}</span>` : ""}
-                            </div>
-                            ${item.status === "partial"
-                                ? `
-                                <div class="borrow-progress">
-                                    <div class="progress-bar">
-                                        <div class="progress-fill" style="width: ${progress}%; background: var(--success)"></div>
-                                    </div>
-                                </div>
-                            `
-                                : ""
-                            }
-                        </div>
-                        <div class="borrow-amount-section">
-                            <div class="borrow-amount">${Utils.formatCurrency(item.amount)}</div>
-                            ${remaining < item.amount ? `<div class="borrow-remaining">Remaining: ${Utils.formatCurrency(remaining)}</div>` : ""}
-                            <span class="status-badge ${item.status}">
-                                <i class="fas ${item.status === "pending" ? "fa-clock" : item.status === "partial" ? "fa-adjust" : "fa-check"}"></i>
-                                ${item.status}
-                            </span>
-                        </div>
-                        <div class="borrow-actions-btns">
-                            <button class="borrow-action-btn payment" onclick="App.openPaymentModal('${item.id}')" title="Record Payment">
-                                <i class="fas fa-dollar-sign"></i>
-                            </button>
-                            <button class="borrow-action-btn edit" onclick="App.openBorrowModal('${item.type}', '${item.id}')" title="Edit">
-                                <i class="fas fa-edit"></i>
-                            </button>
-                            <button class="borrow-action-btn delete" onclick="App.deleteBorrowRecord('${item.id}')" title="Delete">
-                                <i class="fas fa-trash"></i>
-                            </button>
-                        </div>
-                    </div>
-                `;
-            })
-            .join("");
-    },
+        })
+        .join("");
+},
 
     renderBorrowHistory(items) {
         const container = document.getElementById("borrowHistory");
@@ -4995,3 +5150,377 @@ function parseDateString(dateStr) {
     const [year, month, day] = dateStr.split('-').map(Number);
     return new Date(year, month - 1, day, 12, 0, 0); // Noon to avoid edge cases
 }
+
+// Render single borrow/lend card with partial payment support
+function renderBorrowCard(borrow) {
+    const totalAmount = parseFloat(borrow.amount) || 0;
+    const paidAmount = parseFloat(borrow.paidAmount) || 0;
+    const remainingAmount = totalAmount - paidAmount;
+    const isFullyPaid = remainingAmount <= 0;
+    const isPartiallyPaid = paidAmount > 0 && !isFullyPaid;
+    const paymentPercentage = totalAmount > 0 ? (paidAmount / totalAmount) * 100 : 0;
+    
+    // Determine card type
+    const isGiven = borrow.type === 'given' || borrow.type === 'lent';
+    const typeLabel = isGiven ? 'Given to' : 'Taken from';
+    const typeClass = isGiven ? 'given' : 'taken';
+    
+    // Status class
+    let statusClass = '';
+    let statusLabel = '';
+    if (isFullyPaid) {
+        statusClass = 'fully-paid';
+        statusLabel = '✅ Fully Paid';
+    } else if (isPartiallyPaid) {
+        statusClass = 'partially-paid';
+        statusLabel = `⏳ Partial (${paymentPercentage.toFixed(0)}%)`;
+    } else {
+        statusClass = 'pending';
+        statusLabel = '⏳ Pending';
+    }
+    
+    // Format dates
+    const borrowDate = borrow.date ? new Date(borrow.date).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+    }) : '-';
+    
+    const dueDate = borrow.dueDate ? new Date(borrow.dueDate).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric'
+    }) : 'No due date';
+    
+    // Check if overdue
+    const isOverdue = borrow.dueDate && new Date(borrow.dueDate) < new Date() && !isFullyPaid;
+    
+    return `
+        <div class="borrow-card ${typeClass} ${statusClass} ${isOverdue ? 'overdue' : ''}" data-id="${borrow.id}">
+            <!-- Status Badge -->
+            <div class="borrow-status-badge ${statusClass}">
+                ${statusLabel}
+            </div>
+            
+            <!-- Header -->
+            <div class="borrow-header">
+                <div class="borrow-person">
+                    <span class="person-avatar">${(borrow.personName || 'U')[0].toUpperCase()}</span>
+                    <div class="person-info">
+                        <span class="person-name">${borrow.personName || 'Unknown'}</span>
+                        <span class="borrow-type-label">${typeLabel}</span>
+                    </div>
+                </div>
+                <div class="borrow-actions">
+                    ${!isFullyPaid ? `
+                        <button class="btn-icon btn-payment" onclick="openPartialPaymentModal('${borrow.id}')" title="Add Payment">
+                            <i class="fas fa-plus-circle"></i>
+                        </button>
+                    ` : ''}
+                    <button class="btn-icon btn-edit" onclick="editBorrow('${borrow.id}')" title="Edit">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-icon btn-delete" onclick="deleteBorrow('${borrow.id}')" title="Delete">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Amount Section -->
+            <div class="borrow-amount-section">
+                <div class="amount-row">
+                    <span class="amount-label">Total Amount</span>
+                    <span class="amount-value total">${Utils.formatCurrency(totalAmount)}</span>
+                </div>
+                ${paidAmount > 0 ? `
+                    <div class="amount-row paid">
+                        <span class="amount-label">Paid Amount</span>
+                        <span class="amount-value paid-amount">- ${Utils.formatCurrency(paidAmount)}</span>
+                    </div>
+                ` : ''}
+                <div class="amount-row remaining ${isFullyPaid ? 'zero' : 'highlight'}">
+                    <span class="amount-label">Remaining</span>
+                    <span class="amount-value remaining-amount">${Utils.formatCurrency(remainingAmount)}</span>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div class="payment-progress">
+                    <div class="progress-bar">
+                        <div class="progress-fill ${isFullyPaid ? 'complete' : ''}" style="width: ${paymentPercentage}%"></div>
+                    </div>
+                    <span class="progress-text">${paymentPercentage.toFixed(0)}% paid</span>
+                </div>
+            </div>
+            
+            <!-- Details -->
+            <div class="borrow-details">
+                <div class="detail-item">
+                    <i class="fas fa-calendar"></i>
+                    <span>Borrowed: ${borrowDate}</span>
+                </div>
+                <div class="detail-item ${isOverdue ? 'overdue-text' : ''}">
+                    <i class="fas fa-clock"></i>
+                    <span>Due: ${dueDate} ${isOverdue ? '(Overdue!)' : ''}</span>
+                </div>
+                ${borrow.description ? `
+                    <div class="detail-item">
+                        <i class="fas fa-sticky-note"></i>
+                        <span>${borrow.description}</span>
+                    </div>
+                ` : ''}
+            </div>
+            
+            <!-- Payment History (if partial payments exist) -->
+            ${borrow.payments && borrow.payments.length > 0 ? `
+                <div class="payment-history">
+                    <div class="history-toggle" onclick="togglePaymentHistory('${borrow.id}')">
+                        <span><i class="fas fa-history"></i> Payment History (${borrow.payments.length})</span>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="history-list" id="history-${borrow.id}" style="display: none;">
+                        ${borrow.payments.map(p => `
+                            <div class="history-item">
+                                <span class="history-date">${new Date(p.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
+                                <span class="history-amount">+ ${Utils.formatCurrency(p.amount)}</span>
+                                ${p.note ? `<span class="history-note">${p.note}</span>` : ''}
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : ''}
+        </div>
+    `;
+}
+
+// Toggle payment history visibility
+function togglePaymentHistory(borrowId) {
+    const historyEl = document.getElementById(`history-${borrowId}`);
+    if (historyEl) {
+        const isHidden = historyEl.style.display === 'none';
+        historyEl.style.display = isHidden ? 'block' : 'none';
+    }
+}
+
+// Open partial payment modal
+function openPartialPaymentModal(borrowId) {
+    const modal = document.getElementById('partialPaymentModal');
+    const borrowIdInput = document.getElementById('partialPaymentBorrowId');
+    const amountInput = document.getElementById('partialPaymentAmount');
+    const dateInput = document.getElementById('partialPaymentDate');
+    
+    if (borrowIdInput) borrowIdInput.value = borrowId;
+    if (amountInput) amountInput.value = '';
+    if (dateInput) dateInput.value = toLocalDateString(new Date());
+    
+    if (modal) {
+        modal.classList.add('active');
+    }
+}
+
+// Save partial payment
+async function savePartialPayment() {
+    const borrowId = document.getElementById('partialPaymentBorrowId')?.value;
+    const amount = parseFloat(document.getElementById('partialPaymentAmount')?.value) || 0;
+    const date = document.getElementById('partialPaymentDate')?.value;
+    const note = document.getElementById('partialPaymentNote')?.value || '';
+    
+    if (!borrowId || amount <= 0) {
+        Utils.showToast('Please enter a valid amount', 'error');
+        return;
+    }
+    
+    try {
+        // Get current borrows
+        const borrows = await Storage.getBorrows() || [];
+        const borrowIndex = borrows.findIndex(b => b.id === borrowId);
+        
+        if (borrowIndex === -1) {
+            Utils.showToast('Borrow record not found', 'error');
+            return;
+        }
+        
+        const borrow = borrows[borrowIndex];
+        
+        // Initialize payments array if not exists
+        if (!borrow.payments) {
+            borrow.payments = [];
+        }
+        
+        // Add new payment
+        borrow.payments.push({
+            id: Date.now().toString(),
+            amount: amount,
+            date: date,
+            note: note
+        });
+        
+        // Update paid amount
+        borrow.paidAmount = (parseFloat(borrow.paidAmount) || 0) + amount;
+        
+        // Save
+        borrows[borrowIndex] = borrow;
+        await Storage.saveBorrows(borrows);
+        
+        // Close modal
+        closePartialPaymentModal();
+        
+        // Refresh list
+        if (App.loadBorrows) {
+            App.loadBorrows();
+        } else if (App.renderBorrowList) {
+            App.renderBorrowList();
+        }
+        
+        Utils.showToast('Payment recorded successfully!', 'success');
+        
+    } catch (error) {
+        console.error('Error saving partial payment:', error);
+        Utils.showToast('Failed to save payment', 'error');
+    }
+}
+
+// Close partial payment modal
+function closePartialPaymentModal() {
+    const modal = document.getElementById('partialPaymentModal');
+    if (modal) {
+        modal.classList.remove('active');
+    }
+}
+
+// Make functions globally available
+window.togglePaymentHistory = togglePaymentHistory;
+window.openPartialPaymentModal = openPartialPaymentModal;
+window.savePartialPayment = savePartialPayment;
+window.closePartialPaymentModal = closePartialPaymentModal;
+
+// ==================== PAYMENT FORM FIX ====================
+
+// Add savePayment to App if not exists
+if (typeof App.savePayment !== 'function') {
+    App.savePayment = async function() {
+        try {
+            const borrowId = document.getElementById('paymentBorrowId')?.value;
+            const amount = parseFloat(document.getElementById('paymentAmount')?.value) || 0;
+            const date = document.getElementById('paymentDate')?.value;
+            const note = document.getElementById('paymentNote')?.value || '';
+
+            // Validation
+            if (!borrowId) {
+                Utils.showToast('Error: No borrow record selected', 'error');
+                return;
+            }
+
+            if (amount <= 0) {
+                Utils.showToast('Please enter a valid amount', 'error');
+                return;
+            }
+
+            // Get borrows from storage
+            const borrows = await Storage.getBorrows() || [];
+            const borrowIndex = borrows.findIndex(b => b.id === borrowId);
+
+            if (borrowIndex === -1) {
+                Utils.showToast('Borrow record not found', 'error');
+                return;
+            }
+
+            const borrow = borrows[borrowIndex];
+            const totalAmount = parseFloat(borrow.amount) || 0;
+            const currentPaid = parseFloat(borrow.paidAmount) || 0;
+            const remaining = totalAmount - currentPaid;
+
+            // Check if payment exceeds remaining
+            if (amount > remaining) {
+                Utils.showToast(`Payment cannot exceed ₹${remaining.toLocaleString('en-IN')}`, 'error');
+                return;
+            }
+
+            // Initialize payments array if not exists
+            if (!borrow.payments) {
+                borrow.payments = [];
+            }
+
+            // Add payment record
+            const y = new Date().getFullYear();
+            const m = String(new Date().getMonth() + 1).padStart(2, '0');
+            const d = String(new Date().getDate()).padStart(2, '0');
+            const todayStr = `${y}-${m}-${d}`;
+
+            borrow.payments.push({
+                id: Date.now().toString(),
+                amount: amount,
+                date: date || todayStr,
+                note: note
+            });
+
+            // Update paid amount
+            borrow.paidAmount = currentPaid + amount;
+
+            // Update status based on payment
+            const newRemaining = totalAmount - borrow.paidAmount;
+            if (newRemaining <= 0) {
+                borrow.status = 'completed';
+            } else if (borrow.paidAmount > 0) {
+                borrow.status = 'partial';
+            }
+
+            // Save back to storage
+            borrows[borrowIndex] = borrow;
+            await Storage.saveBorrows(borrows);
+
+            // Close modal
+            App.closePaymentModal();
+
+            // Refresh the borrow page
+            await App.loadBorrowPage();
+
+            // Show success message
+            if (newRemaining <= 0) {
+                Utils.showToast(`🎉 Fully paid! Payment of ₹${amount.toLocaleString('en-IN')} recorded.`, 'success');
+            } else {
+                Utils.showToast(`✅ Payment recorded! Remaining: ₹${newRemaining.toLocaleString('en-IN')}`, 'success');
+            }
+
+        } catch (error) {
+            console.error('Error saving payment:', error);
+            Utils.showToast('Failed to save payment', 'error');
+        }
+    };
+}
+
+// Add closePaymentModal to App if not exists
+if (typeof App.closePaymentModal !== 'function') {
+    App.closePaymentModal = function() {
+        const modal = document.getElementById('paymentModal');
+        if (modal) {
+            modal.classList.remove('active');
+        }
+        // Clear form
+        const form = document.getElementById('addPaymentForm');
+        if (form) form.reset();
+    };
+}
+
+// Attach form submit handler when DOM is ready
+document.addEventListener('DOMContentLoaded', function() {
+    const paymentForm = document.getElementById('addPaymentForm');
+    if (paymentForm) {
+        paymentForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            console.log('Payment form submitted');
+            await App.savePayment();
+        });
+        console.log('✅ Payment form handler attached');
+    }
+    
+    // Close button handler
+    const closePaymentBtn = document.getElementById('closePaymentModal');
+    if (closePaymentBtn) {
+        closePaymentBtn.addEventListener('click', function() {
+            App.closePaymentModal();
+        });
+        console.log('✅ Close payment modal handler attached');
+    }
+});
+
+console.log('✅ Payment form fix loaded');

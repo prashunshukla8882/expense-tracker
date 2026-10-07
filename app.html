@@ -1723,6 +1723,43 @@
         </div>
     </div>
 
+    <!-- Partial Payment Modal -->
+    <div class="modal" id="partialPaymentModal">
+        <div class="modal-content modal-sm">
+            <div class="modal-header">
+                <h3><i class="fas fa-money-bill-wave"></i> Record Payment</h3>
+                <button class="modal-close" onclick="closePartialPaymentModal()">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <input type="hidden" id="partialPaymentBorrowId">
+    
+                <div class="form-group">
+                    <label for="partialPaymentAmount">Payment Amount *</label>
+                    <input type="number" id="partialPaymentAmount" placeholder="Enter amount received" min="0" step="0.01"
+                        required>
+                </div>
+    
+                <div class="form-group">
+                    <label for="partialPaymentDate">Payment Date *</label>
+                    <input type="date" id="partialPaymentDate" required>
+                </div>
+    
+                <div class="form-group">
+                    <label for="partialPaymentNote">Note (Optional)</label>
+                    <input type="text" id="partialPaymentNote" placeholder="e.g., Paid via UPI">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closePartialPaymentModal()">Cancel</button>
+                <button class="btn btn-primary" onclick="App.savePayment()">
+                    <i class="fas fa-check"></i> Save Payment
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Notification Panel -->
     <div class="notification-panel" id="notificationPanel">
         <div class="notification-header">
