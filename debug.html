@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Debug</title>
+    <style>
+        body {
+            font-family: Arial;
+            padding: 40px;
+            background: #1a1a2e;
+            color: white;
+        }
+
+        .box {
+            background: #16213e;
+            padding: 30px;
+            border-radius: 15px;
+            max-width: 500px;
+            margin: auto;
+        }
+
+        h1 {
+            color: #667eea;
+        }
+
+        #log {
+            background: #0f0f23;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: monospace;
+            font-size: 14px;
+            white-space: pre-wrap;
+            min-height: 200px;
+        }
+
+        button {
+            padding: 15px 25px;
+            margin: 10px 5px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .red {
+            background: #ef4444;
+            color: white;
+        }
+
+        .blue {
+            background: #667eea;
+            color: white;
+        }
+
+        .green {
+            background: #10b981;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="box">
+        <h1>🔍 Debug Page</h1>
+        <div id="log">Loading...</div>
+        <br>
+        <button class="red" onclick="doLogout()">LOGOUT</button>
+        <button class="blue" onclick="location.href='index.html'">Go to Login</button>
+        <button class="green" onclick="location.reload()">Refresh</button>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
+    <script>
+        var logDiv = document.getElementById('log');
+
+        function log(msg) {
+            console.log(msg);
+            logDiv.innerHTML += msg + '\n';
+        }
+
+        logDiv.innerHTML = '';
+        log('=== DEBUG PAGE ===');
+        log('This page does NOT load storage.js or app.js');
+        log('');
+
+        // Init Firebase
+        firebase.initializeApp({
+            apiKey: "AIzaSyBJzqUTVi8osOot5Ju_NT2LTbIZueQa_iI",
+            authDomain: "expense-tracker-8bbaa.firebaseapp.com",
+            projectId: "expense-tracker-8bbaa"
+        });
+
+        var auth = firebase.auth();
+        log('Firebase ready ✓');
+        log('');
+
+        // Check auth - NO REDIRECT!
+        auth.onAuthStateChanged(function (user) {
+            if (user) {
+                log('✅ LOGGED IN');
+                log('Email: ' + user.email);
+                log('UID: ' + user.uid);
+                log('');
+                log('You are logged in!');
+                log('The crash is in storage.js or app.js');
+            } else {
+                log('❌ NOT LOGGED IN');
+                log('');
+                log('Click "Go to Login" to sign in.');
+            }
+        });
+
+        function doLogout() {
+            log('Logging out...');
+            auth.signOut().then(function () {
+                log('✅ Logged out!');
+                logDiv.innerHTML = 'Logged out! Click "Go to Login"';
+            });
+        }
+    </script>
+</body>
+
+</html>
