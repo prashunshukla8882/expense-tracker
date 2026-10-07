@@ -3501,15 +3501,3 @@ if ("serviceWorker" in navigator) {
   });
 }
 
-// Check if authenticated
-if (sessionStorage.getItem("ef_access_granted") !== "true") {
-  window.location.href = "index.html";
-}
-
-// Logout handler
-document.getElementById("logoutBtn")?.addEventListener("click", function () {
-  if (confirm("Are you sure you want to logout?")) {
-    sessionStorage.removeItem("ef_access_granted");
-    window.location.href = "index.html";
-  }
-});
